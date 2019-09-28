@@ -46,16 +46,18 @@ void DebugView::endFrame()
         float avgUpdate = std::accumulate(m_lastUpdates.begin(), m_lastUpdates.end(), 0, [](int total, auto b) { return total + b.count(); }) / float(m_lastUpdates.size()) / 1000000;
 
         auto len = snprintf(debugBuf.data(), debugBuf.size(),
-                 "=== [Debug] ===\n\nFPS: %d\nUPS: %d\n\n--- Frames: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal long: %ld\n\n--- Updates: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal long: %ld",
+                 "=== [Debug] ===\n\nFPS: %d\nUPS: %d\n\n--- Frames: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal >=%dms: %ld\n\n--- Updates: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal >=%dms: %ld",
                  fps,
                  ups,
                  std::chrono::duration_cast<std::chrono::milliseconds>(m_shortestFrame).count(),
                  std::chrono::duration_cast<std::chrono::milliseconds>(m_longestFrame).count(),
                  avgFrame,
+                 kLongFrameTimeMS,
                  m_longFramesCounter,
                  std::chrono::duration_cast<std::chrono::milliseconds>(m_shortestUpdate).count(),
                  std::chrono::duration_cast<std::chrono::milliseconds>(m_longestUpdate).count(),
                  avgUpdate,
+                 kLongUpdateTimeMS,
                  m_longUpdatesCounter);
 
         m_debugString = std::string(debugBuf.data(), len);
