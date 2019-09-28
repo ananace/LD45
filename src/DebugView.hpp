@@ -15,7 +15,7 @@ public:
     {
         kFramesToCalc = 100,
         kLongFrameTimeMS = 15,
-        kLongUpdateTimeMS = 15
+        kLongUpdateTimeMS = 5
     };
 
     DebugView();
