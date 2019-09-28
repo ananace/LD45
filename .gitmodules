@@ -1,0 +1,6 @@
+[submodule "extern/entt"]
+	path = extern/entt
+	url = https://github.com/skypjack/entt
+[submodule "extern/GSL"]
+	path = extern/GSL
+	url = https://github.com/microsoft/GSL

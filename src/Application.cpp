@@ -1,0 +1,100 @@
+#include "Application.hpp"
+#include "BaseState.hpp"
+#include "DebugView.hpp"
+
+#include <SFML/Window/Event.hpp>
+#include <gsl/gsl_util>
+
+#include <chrono>
+
+Application::Application()
+    : m_stateManager(*this)
+{
+    m_window.create(sf::VideoMode(1366, 768), "LD45");
+    m_defaultView = m_window.getDefaultView();
+}
+
+Application::~Application()
+{
+}
+
+void Application::run()
+{
+    using clock = std::chrono::high_resolution_clock;
+    constexpr std::chrono::nanoseconds ticklength(1000000000 / kTickRate);
+    constexpr std::chrono::duration<float> ticklength_s(ticklength);
+
+    std::chrono::nanoseconds accumulator{};
+    auto lastFrame = clock::now();
+    sf::Event ev;
+
+    DebugView debug;
+
+    while (m_window.isOpen())
+    {
+        debug.startFrame();
+
+        auto dt = clock::now() - lastFrame;
+        lastFrame = clock::now();
+        std::chrono::duration<float> dt_s(dt);
+
+        accumulator += std::chrono::nanoseconds(dt);
+
+        auto* curState = m_stateManager.getCurrent();
+        while (m_window.pollEvent(ev))
+        {
+            switch (ev.type)
+            {
+            case sf::Event::Closed:
+                m_window.close(); break;
+
+            case sf::Event::Resized:
+                {
+                    sf::Vector2f size(ev.size.width, ev.size.height);
+
+                    m_defaultView.setSize(size);
+                    m_defaultView.setCenter(size / 2.f);
+                } break;
+
+            default:
+                break;
+            }
+
+            if (GSL_LIKELY(curState))
+                curState->handleEvent(ev);
+        }
+
+        // Dynamic update - every frame
+        if (GSL_LIKELY(curState))
+            curState->update(dt_s.count());
+
+        while (accumulator >= ticklength)
+        {
+            // Fixed update - N times per second
+            if (GSL_LIKELY(curState))
+                curState->update(ticklength_s.count());
+
+            accumulator -= ticklength;
+        }
+
+        const auto alpha = (float)accumulator.count() / ticklength.count();
+
+        curState = m_stateManager.getCurrent();
+        m_window.clear();
+        // m_window.setView(m_defaultView);
+
+        if (GSL_LIKELY(curState))
+            curState->render(alpha);
+
+        m_window.draw(debug);
+
+        m_window.display();
+
+        debug.endFrame();
+    }
+}
+
+void Application::stop()
+{
+    m_window.close();
+}
