@@ -70,18 +70,22 @@ void Application::run()
 
         while (accumulator >= ticklength)
         {
+            debug.startUpdate();
+
             // Fixed update - N times per second
             if (GSL_LIKELY(curState))
                 curState->update(ticklength_s.count());
 
             accumulator -= ticklength;
+
+            debug.endUpdate();
         }
 
         const auto alpha = (float)accumulator.count() / ticklength.count();
 
         curState = m_stateManager.getCurrent();
         m_window.clear();
-        // m_window.setView(m_defaultView);
+        m_window.setView(m_defaultView);
 
         if (GSL_LIKELY(curState))
             curState->render(alpha);
