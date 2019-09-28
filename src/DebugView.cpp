@@ -45,8 +45,11 @@ void DebugView::endFrame()
         float avgFrame = std::accumulate(m_lastFrames.begin(), m_lastFrames.end(), 0, [](int total, auto b) { return total + b.count(); }) / float(m_lastFrames.size()) / 1000000;
         float avgUpdate = std::accumulate(m_lastUpdates.begin(), m_lastUpdates.end(), 0, [](int total, auto b) { return total + b.count(); }) / float(m_lastUpdates.size()) / 1000000;
 
+        auto monospace = Util::GetDefaultFont(Font_Monospace).getInfo().family;
+        auto regular = Util::GetDefaultFont(Font_Default).getInfo().family;
+
         auto len = snprintf(debugBuf.data(), debugBuf.size(),
-                 "=== [Debug] ===\n\nFPS: %d\nUPS: %d\n\n--- Frames: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal >=%dms: %ld\n\n--- Updates: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal >=%dms: %ld",
+                 "=== [Debug] ===\n\nFPS: %d\nUPS: %d\n\n--- Frames: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal >=%dms: %ld\n\n--- Updates: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal >=%dms: %ld\n\n--- Fonts: ---\nMonospace: %s\nRegular:   %s\n",
                  fps,
                  ups,
                  std::chrono::duration_cast<std::chrono::milliseconds>(m_shortestFrame).count(),
@@ -58,7 +61,9 @@ void DebugView::endFrame()
                  std::chrono::duration_cast<std::chrono::milliseconds>(m_longestUpdate).count(),
                  avgUpdate,
                  kLongUpdateTimeMS,
-                 m_longUpdatesCounter);
+                 m_longUpdatesCounter,
+                 monospace.c_str(),
+                 regular.c_str());
 
         m_debugString = std::string(debugBuf.data(), len);
         softReset();
