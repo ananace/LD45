@@ -46,7 +46,7 @@ namespace Util
         {
             sf::Font Font;
             bool Loaded;
-        } defaultFonts[Font_COUNT];
+        } defaultFonts[Font_COUNT] = {};
 
         if (GSL_LIKELY(defaultFonts[type].Loaded))
         {
