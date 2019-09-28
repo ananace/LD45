@@ -6,6 +6,7 @@
 #include <gsl/gsl_util>
 
 #include <chrono>
+#include <thread>
 
 Application::Application()
     : m_stateManager(*this)
@@ -23,6 +24,7 @@ void Application::run()
     using clock = std::chrono::high_resolution_clock;
     constexpr std::chrono::nanoseconds ticklength(1000000000 / kTickRate);
     constexpr std::chrono::duration<float> ticklength_s(ticklength);
+    constexpr std::chrono::milliseconds targetDt(7);
 
     std::chrono::nanoseconds accumulator{};
     auto lastFrame = clock::now();
@@ -95,6 +97,10 @@ void Application::run()
         m_window.display();
 
         debug.endFrame();
+
+        // Sleep before next frame
+        if (GSL_LIKELY(dt < targetDt))
+            std::this_thread::sleep_for(targetDt - dt);
     }
 }
 
