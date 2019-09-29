@@ -6,7 +6,6 @@
 #include "../Components/Renderables.hpp"
 
 #include <SFML/Graphics/Drawable.hpp>
-#include <SFML/Graphics/Transformable.hpp>
 
 #include <gsl/gsl_util>
 
@@ -51,15 +50,23 @@ void RenderSystem::update(const float aAlpha)
         auto pos = Util::GetLerped(aAlpha, renderable.LastPosition, renderable.Position);
         auto ang = Util::GetLerped(aAlpha, renderable.LastAngle, renderable.Angle);
 
-        renderable.Transformable->setPosition(pos);
-        renderable.Transformable->setRotation(ang);
+        sf::RenderStates states;
+        states.transform
+            .translate(pos)
+            .rotate(ang);
 
-        target.draw(*renderable.Drawable);
+        target.draw(*renderable.Drawable, states);
     }
     for (auto& ent : r.view<Renderable>())
     {
         auto& renderable = r.get<Renderable>(ent);
-        target.draw(*renderable.Drawable);
+
+        sf::RenderStates states;
+        states.transform
+            .translate(renderable.Position)
+            .rotate(renderable.Angle);
+
+        target.draw(*renderable.Drawable, states);
     }
 }
 

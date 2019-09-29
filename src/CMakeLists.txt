@@ -29,6 +29,7 @@ set(LD45_HEADERS
 
     Systems/PhysicsSystem.hpp
     Systems/RenderSystem.hpp
+    Systems/UIRenderSystem.hpp
 )
 
 set(LD45_SOURCES
@@ -44,6 +45,7 @@ set(LD45_SOURCES
 
     Systems/PhysicsSystem.cpp
     Systems/RenderSystem.cpp
+    Systems/UIRenderSystem.cpp
 
     main.cpp
 )
