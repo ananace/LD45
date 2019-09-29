@@ -1,3 +1,5 @@
+#include "Application.hpp"
+#include "BaseState.hpp"
 #include "DebugView.hpp"
 #include "Util.hpp"
 
@@ -8,8 +10,14 @@
 #include <numeric>
 
 DebugView::DebugView()
+    : m_application{}
 {
     reset();
+}
+
+void DebugView::init(Application& aApplication)
+{
+    m_application = &aApplication;
 }
 
 void DebugView::startFrame()
@@ -48,8 +56,16 @@ void DebugView::endFrame()
         auto monospace = Util::GetDefaultFont(Font_Monospace).getInfo().family;
         auto regular = Util::GetDefaultFont(Font_Default).getInfo().family;
 
+        std::string curstate = "[N/A]";
+        if (GSL_LIKELY(m_application))
+        {
+            auto* stateptr = m_application->getStateManager().getCurrent();
+            if (GSL_LIKELY(stateptr))
+                curstate = stateptr->getName();
+        }
+
         auto len = snprintf(debugBuf.data(), debugBuf.size(),
-                 "=== [Debug] ===\n\nFPS: %d\nUPS: %d\n\n--- Frames: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal >=%dms: %ld\n\n--- Updates: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal >=%dms: %ld\n\n--- Fonts: ---\nMonospace: %s\nRegular:   %s\n",
+                 "=== [Debug] ===\n\nFPS: %d\nUPS: %d\n\n--- Frames: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal >=%dms: %ld\n\n--- Updates: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal >=%dms: %ld\n\n--- Fonts: ---\nMonospace: %s\nRegular:   %s\n\n--- Application: ---\nCurrent State: %s\n",
                  fps,
                  ups,
                  std::chrono::duration_cast<std::chrono::milliseconds>(m_shortestFrame).count(),
@@ -63,7 +79,8 @@ void DebugView::endFrame()
                  kLongUpdateTimeMS,
                  m_longUpdatesCounter,
                  monospace.c_str(),
-                 regular.c_str());
+                 regular.c_str(),
+                 curstate.c_str());
 
         m_debugString = std::string(debugBuf.data(), len);
         softReset();

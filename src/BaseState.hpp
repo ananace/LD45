@@ -30,7 +30,7 @@ protected:
     inline sf::RenderWindow& getRenderWindow() { return *m_renderWindow; }
     inline const sf::RenderWindow& getRenderWindow() const { return *m_renderWindow; }
 private:
-    void setApplication(Application& aApp);
+    void setApplication(Application* aApp);
 
     Application* m_application;
     std::string m_name;

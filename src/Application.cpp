@@ -2,6 +2,8 @@
 #include "BaseState.hpp"
 #include "DebugView.hpp"
 
+#include "States/MenuState.hpp"
+
 #include <SFML/Window/Event.hpp>
 #include <gsl/gsl_util>
 
@@ -9,7 +11,6 @@
 #include <thread>
 
 Application::Application()
-    : m_stateManager(*this)
 {
     m_window.create(sf::VideoMode(1366, 768), "LD45");
     m_defaultView = m_window.getDefaultView();
@@ -21,6 +22,10 @@ Application::~Application()
 
 void Application::run()
 {
+    m_stateManager.init(this);
+
+    m_stateManager.pushState(std::make_unique<States::MenuState>());
+
     using clock = std::chrono::high_resolution_clock;
     constexpr std::chrono::nanoseconds ticklength(1000000000 / kTickRate);
     constexpr std::chrono::duration<float> ticklength_s(ticklength);
@@ -31,6 +36,7 @@ void Application::run()
     sf::Event ev;
 
     DebugView debug;
+    debug.init(*this);
 
     while (m_window.isOpen())
     {
@@ -76,7 +82,7 @@ void Application::run()
 
             // Fixed update - N times per second
             if (GSL_LIKELY(curState))
-                curState->update(ticklength_s.count());
+                curState->fixedUpdate(ticklength_s.count());
 
             accumulator -= ticklength;
 

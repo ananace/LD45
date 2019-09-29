@@ -5,9 +5,9 @@
 namespace Components
 {
 
-struct Velocity
+struct Acceleration
 {
-    sf::Vector2f Velocity;
+    sf::Vector2f Acceleration;
 };
 
 }

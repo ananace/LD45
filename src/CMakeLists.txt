@@ -13,16 +13,37 @@ endif ()
 set(LD45_HEADERS
     Application.hpp
     BaseState.hpp
+    BaseSystem.hpp
     DebugView.hpp
+    EntityManager.hpp
+    ResourceManager.hpp
     StateManager.hpp
     Util.hpp
+
+    Components/Acceleration.hpp
+    Components/Friction.hpp
+    Components/Physical.hpp
+    Components/Renderables.hpp
+
+    States/MenuState.hpp
+
+    Systems/PhysicsSystem.hpp
+    Systems/RenderSystem.hpp
 )
 
 set(LD45_SOURCES
     Application.cpp
     BaseState.cpp
+    BaseSystem.cpp
     DebugView.cpp
+    EntityManager.cpp
+    ResourceManager.cpp
     StateManager.cpp
+
+    States/MenuState.cpp
+
+    Systems/PhysicsSystem.cpp
+    Systems/RenderSystem.cpp
 
     main.cpp
 )

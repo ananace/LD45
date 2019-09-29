@@ -9,8 +9,10 @@ class BaseState;
 class StateManager
 {
 public:
-    StateManager(Application& aApp);
+    StateManager();
     ~StateManager();
+
+    void init(Application* aApplication);
 
     bool hasState(const std::string& aName) const;
     bool pushState(std::unique_ptr<BaseState> aState, bool aSwitch = true);
@@ -21,7 +23,7 @@ public:
     inline const BaseState* getCurrent() const { return m_curState; }
 
 private:
-    Application& m_application;
+    Application* m_application;
     std::deque<std::unique_ptr<BaseState>> m_states;
     BaseState* m_curState;
 };

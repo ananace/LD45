@@ -2,8 +2,8 @@
 #include "StateManager.hpp"
 #include "Util.hpp"
 
-StateManager::StateManager(Application& aApp)
-    : m_application(aApp)
+StateManager::StateManager()
+    : m_application{}
     , m_curState{}
 {
 
@@ -11,6 +11,11 @@ StateManager::StateManager(Application& aApp)
 
 StateManager::~StateManager()
 {
+}
+
+void StateManager::init(Application* aApplication)
+{
+    m_application = aApplication;
 }
 
 bool StateManager::hasState(const std::string& aName) const

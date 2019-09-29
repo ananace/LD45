@@ -8,6 +8,8 @@
 
 namespace sf { class RenderTarget; }
 
+class Application;
+
 class DebugView : public sf::Drawable
 {
 public:
@@ -19,6 +21,8 @@ public:
     };
 
     DebugView();
+
+    void init(Application& aApplication);
 
     void startFrame();
     void endFrame();
@@ -32,6 +36,8 @@ public:
 
 private:
     void softReset();
+
+    Application* m_application;
 
     size_t m_frameCounter,
            m_updateCounter,

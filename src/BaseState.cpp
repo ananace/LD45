@@ -14,10 +14,10 @@ BaseState::~BaseState()
 {
 }
 
-void BaseState::setApplication(Application& aApp)
+void BaseState::setApplication(Application* aApp)
 {
-    m_application = &aApp;
+    m_application = aApp;
 
-    m_stateManager = &aApp.getStateManager();
-    m_renderWindow = &aApp.getRenderWindow();
+    m_stateManager = &aApp->getStateManager();
+    m_renderWindow = &aApp->getRenderWindow();
 }

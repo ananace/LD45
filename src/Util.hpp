@@ -40,6 +40,11 @@ namespace Util
         return (1.f - aAlpha) * aVecFrom + aAlpha * aVecTo;
     }
 
+    inline float GetLerped(float aAlpha, const float aFrom, const float aTo)
+    {
+        return (1.f - aAlpha) * aFrom + aAlpha * aTo;
+    }
+
     inline sf::Font GetDefaultFont(Font type = Font_Default)
     {
         static struct DefaultFont
