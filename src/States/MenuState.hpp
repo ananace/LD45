@@ -22,7 +22,6 @@ public:
 
 private:
     Components::UIButton& addButton(const std::string& aTitle);
-    void onButtonAdded(entt::entity aEntity, entt::registry& aRegistry, Components::UIButton& aButton);
 
     EntityManager m_backgroundManager,
                   m_foregroundManager;

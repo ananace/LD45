@@ -16,5 +16,7 @@ void BaseSystem::init(Application* aApplication, entt::registry& aRegistry, entt
     m_application = aApplication;
     m_registry = &aRegistry;
     m_dispatcher = &aDispatcher;
+
+    onInit();
 }
 

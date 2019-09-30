@@ -31,9 +31,8 @@ void MenuState::init()
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::RenderSystem>());
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::UIRenderSystem>());
 
-    m_foregroundManager.getRegistry().on_construct<Components::UIButton>().connect<&MenuState::onButtonAdded>(*this);
-
     addButton("Play");
+    addButton("Settings").Position.top += 50;
     auto& q = addButton("Quit");
     q.Position.top += 100;
     q.Color = { 128, 64, 64 };
@@ -85,18 +84,7 @@ Components::UIButton& MenuState::addButton(const std::string& aTitle)
     auto button = r.create();
     auto& uib = r.assign<Components::UIButton>(button, aTitle);
     uib.Color = { 64, 128, 64 };
-    uib.Position = { 10, 10, 100, 25 };
+    uib.Position = { 100, 100, 150, 30 };
 
     return uib;
-}
-
-void MenuState::onButtonAdded(entt::entity aEntity, entt::registry& aRegistry, Components::UIButton& aButton)
-{
-    auto& d = m_foregroundManager.getDispatcher();
-
-    aButton.Dispatcher = &d;
-
-    d.sink<Events::InputEvent<sf::Event::MouseMoved>>().connect<&Components::UIButton::onMouseMove>(aButton);
-    d.sink<Events::InputEvent<sf::Event::MouseButtonPressed>>().connect<&Components::UIButton::onMousePress>(aButton);
-    d.sink<Events::InputEvent<sf::Event::MouseButtonReleased>>().connect<&Components::UIButton::onMouseRelease>(aButton);
 }
