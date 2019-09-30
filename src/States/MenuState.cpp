@@ -32,9 +32,8 @@ void MenuState::init()
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::UIRenderSystem>());
 
     addButton("Play");
-    addButton("Settings").Position.top += 50;
     auto& q = addButton("Quit");
-    q.Position.top += 100;
+    q.Position.top += 50;
     q.Color = { 128, 64, 64 };
 }
 
@@ -84,7 +83,7 @@ Components::UIButton& MenuState::addButton(const std::string& aTitle)
     auto button = r.create();
     auto& uib = r.assign<Components::UIButton>(button, aTitle);
     uib.Color = { 64, 128, 64 };
-    uib.Position = { 100, 100, 150, 30 };
+    uib.Position = { -250, 150, 150, 30 };
 
     return uib;
 }

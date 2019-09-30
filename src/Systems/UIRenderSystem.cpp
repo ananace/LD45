@@ -87,9 +87,16 @@ void UIRenderSystem::update(const float aAlpha)
         auto rect = buttonText.getLocalBounds();
         buttonText.setOrigin(rect.width / 2.f, rect.height / 2.f);
 
+        float left = button.Position.left;
+        if (left < 0)
+            left += target.getView().getSize().x;
+        float top = button.Position.top;
+        if (top < 0)
+            top += target.getView().getSize().y;
+
         sf::RenderStates states;
         states.transform
-            .translate(button.Position.left, button.Position.top);
+            .translate(left, top);
 
         if (button.isPressed())
             states.transform.translate(2, 2);
@@ -105,9 +112,16 @@ void UIRenderSystem::onMouseMove(const Events::InputEvent<sf::Event::MouseMoved>
 {
     auto& r = getRegistry();
     sf::Vector2f mousePos{ float(ev.Event.mouseMove.x), float(ev.Event.mouseMove.y) };
+    sf::Vector2f viewSize = getApplication().getRenderWindow().getView().getSize();
 
-    r.view<UIButton>().each([&mousePos](auto ent, auto& button) {
-        bool hovered = button.Position.contains(mousePos);
+    r.view<UIButton>().each([&viewSize, &mousePos](auto ent, auto& button) {
+        auto rect = button.Position;
+        if (rect.left < 0)
+            rect.left += viewSize.x;
+        if (rect.top < 0)
+            rect.top += viewSize.y;
+
+        bool hovered = rect.contains(mousePos);
 
         if (hovered)
             button.Flags |= UIButton::Flag_Hovered;
@@ -122,9 +136,15 @@ void UIRenderSystem::onMousePress(const Events::InputEvent<sf::Event::MouseButto
 
     auto& r = getRegistry();
     sf::Vector2f mousePos{ float(ev.Event.mouseButton.x), float(ev.Event.mouseButton.y) };
+    sf::Vector2f viewSize = getApplication().getRenderWindow().getView().getSize();
 
-    r.view<UIButton>().each([&mousePos](auto ent, auto& button) {
-        bool hovered = button.Position.contains(mousePos);
+    r.view<UIButton>().each([&viewSize, &mousePos](auto ent, auto& button) {
+        auto rect = button.Position;
+        if (rect.left < 0)
+            rect.left += viewSize.x;
+        if (rect.top < 0)
+            rect.top += viewSize.y;
+        bool hovered = rect.contains(mousePos);
 
         if (hovered)
             button.Flags |= UIButton::Flag_Pressed;
@@ -140,9 +160,15 @@ void UIRenderSystem::onMouseRelease(const Events::InputEvent<sf::Event::MouseBut
     auto& r = getRegistry();
     auto& d = getDispatcher();
     sf::Vector2f mousePos{ float(ev.Event.mouseButton.x), float(ev.Event.mouseButton.y) };
+    sf::Vector2f viewSize = getApplication().getRenderWindow().getView().getSize();
 
-    r.view<UIButton>().each([&d, &mousePos](auto ent, auto& button) {
-        bool hovered = button.Position.contains(mousePos);
+    r.view<UIButton>().each([&d, &viewSize, &mousePos](auto ent, auto& button) {
+        auto rect = button.Position;
+        if (rect.left < 0)
+            rect.left += viewSize.x;
+        if (rect.top < 0)
+            rect.top += viewSize.y;
+        bool hovered = rect.contains(mousePos);
 
         if (hovered && (button.Flags & UIButton::Flag_Pressed) == UIButton::Flag_Pressed)
             d.enqueue<Events::UIButtonClicked>({ button.Text });
