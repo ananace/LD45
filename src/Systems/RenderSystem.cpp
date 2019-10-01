@@ -34,10 +34,10 @@ void RenderSystem::update(const float aAlpha)
         {
             auto& phys = r.get<Physical>(ent);
 
-            if (phys.Position != renderable.Position)
+            if (phys.Position != renderable.LastPosition)
             {
-                renderable.LastPosition = renderable.Position;
-                renderable.Position = phys.Position;
+                renderable.LastPosition = phys.Position;
+                renderable.Position = phys.Position + phys.Velocity * Application::kTickLength;
             }
 
             if (phys.Angle != renderable.Angle)

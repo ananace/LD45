@@ -12,6 +12,8 @@ public:
         kTickRate = 60
     };
 
+    static constexpr float kTickLength = 1.f / kTickRate;
+
     Application();
     Application(const Application&) = delete;
     Application(Application&&) = delete;
