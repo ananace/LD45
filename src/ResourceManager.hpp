@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/System/Err.hpp>
+#include <entt/core/hashed_string.hpp>
 
 #include <any>
 #include <memory>
@@ -29,17 +30,17 @@ public:
     ~ResourceManager();
 
     template<typename T>
-    std::shared_ptr<T> load(const std::string& aName) {
+    std::shared_ptr<T> load(entt::hashed_string aName) {
         if (m_registeredResources.count(aName) == 0)
         {
-            RES_ERROR << "Tried to load unregistered resource " << aName << std::endl;
+            RES_ERROR << "Tried to load unregistered resource " << std::string(aName.data()) << std::endl;
             return std::shared_ptr<T>();
         }
 
         const auto& def = m_registeredResources.at(aName);
         if (def.Type != typeid(T))
         {
-            RES_ERROR << "Resource " << aName << " is not of type " << def.Type.name() << std::endl;
+            RES_ERROR << "Resource " << def.Name << " is not of type " << def.Type.name() << std::endl;
             return std::shared_ptr<T>();
         }
 
@@ -52,7 +53,7 @@ public:
 
             if (loaded)
             {
-                RES_DEBUG << "Resource " << aName << " already loaded, returning" << std::endl;
+                RES_DEBUG << "Resource " << def.Name << " already loaded, returning" << std::endl;
                 return std::reinterpret_pointer_cast<T>(loaded);
             }
         }
@@ -76,6 +77,6 @@ private:
     template<typename T>
     std::shared_ptr<T> loadDefinition(const ResourceDefinition& aFile);
 
-    std::unordered_map<std::string, ResourceDefinition> m_registeredResources;
-    std::unordered_map<std::string, std::weak_ptr<void *>> m_loadedResources;
+    std::unordered_map<entt::hashed_string::hash_type, ResourceDefinition> m_registeredResources;
+    std::unordered_map<entt::hashed_string::hash_type, std::weak_ptr<void *>> m_loadedResources;
 };

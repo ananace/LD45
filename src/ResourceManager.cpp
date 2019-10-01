@@ -18,7 +18,8 @@ ResourceManager::~ResourceManager()
 void ResourceManager::addResource(ResourceDefinition&& aResource)
 {
     RES_DEBUG << "Registering " << aResource.Name << " as " << aResource.Type.name() << " from " << aResource.Path << std::endl;
-    m_registeredResources.emplace(aResource.Name, std::move(aResource));
+
+    m_registeredResources.emplace(entt::hashed_string(aResource.Name.c_str()).value(), std::move(aResource));
 }
 
 #define DEFAULT_LOAD(T) \
