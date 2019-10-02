@@ -62,23 +62,23 @@ bool StateManager::popState(const std::string& aName)
 
 bool StateManager::changeState(const std::string& aName, uint8_t aFlags)
 {
-    for (auto& state : m_states)
+    for (auto it = m_states.begin(); it != m_states.end(); ++it)
     {
+        auto& state = *it;
         if (state->getName() == aName)
         {
             if ((aFlags & State_PopSelf) == State_PopSelf)
             {
-                auto it = std::find_if(m_states.begin(), m_states.end(), [&](auto& test) { return test.get() == m_curState; });
-                m_states.erase(it);
+                auto curIt = std::find_if(m_states.begin(), m_states.end(), [&](auto& test) { return test.get() == m_curState; });
+                m_states.erase(curIt);
             }
 
             m_curState = state.get();
 
             if ((aFlags & State_BringToFront) == State_BringToFront)
             {
-                auto it = std::find(m_states.begin(), m_states.end(), state);
                 m_states.erase(it);
-                m_states.push_front(std::move(*it));
+                m_states.push_front(std::move(state));
             }
 
             return true;
