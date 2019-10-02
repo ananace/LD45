@@ -25,7 +25,7 @@ public:
     bool hasState(const std::string& aName) const;
     bool pushState(std::unique_ptr<BaseState> aState, uint8_t aFlags = State_SwitchTo);
     bool popState(const std::string& aName);
-    bool changeState(const std::string& aName, uint8_t aFlags = State_SwitchTo);
+    bool changeState(const std::string& aName, uint8_t aFlags = State_None);
 
     inline BaseState* getCurrent() { return m_curState; }
     inline const BaseState* getCurrent() const { return m_curState; }
