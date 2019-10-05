@@ -9,7 +9,8 @@ class Application
 public:
     enum
     {
-        kTickRate = 60
+        kTickRate = 60,
+        kTargetDt = 6,
     };
 
     static constexpr float kTickLength = 1.f / kTickRate;

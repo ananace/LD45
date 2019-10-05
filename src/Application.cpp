@@ -15,6 +15,7 @@
 Application::Application()
 {
     m_window.create(sf::VideoMode(1366, 768), "LD45");
+    // m_window.setVerticalSyncEnabled(true);
     m_defaultView = m_window.getDefaultView();
 
     m_resourceManager.addResource<sf::Shader>("Atomsphere", "data/Atmosphere.frag", sf::Shader::Fragment);
@@ -33,7 +34,7 @@ void Application::run()
     using clock = std::chrono::high_resolution_clock;
     constexpr std::chrono::nanoseconds ticklength(1000000000 / kTickRate);
     constexpr std::chrono::duration<float> ticklength_s(ticklength);
-    constexpr std::chrono::milliseconds targetDt(7);
+    constexpr std::chrono::milliseconds targetDt(kTargetDt);
 
     std::chrono::nanoseconds accumulator{};
     auto lastFrame = clock::now();
@@ -105,7 +106,6 @@ void Application::run()
         m_window.draw(debug);
 
         m_window.display();
-
         debug.endFrame();
 
         // Sleep before next frame
