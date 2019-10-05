@@ -28,21 +28,25 @@ void InputSystem::update(const float aDt)
         float(sf::Keyboard::isKeyPressed(sf::Keyboard::S)) - sf::Keyboard::isKeyPressed(sf::Keyboard::W)
     };
 
-    auto inputs = r.view<const Components::PlayerInput, Components::Velocity>();
+    auto inputs = r.group<Components::PlayerInput>(entt::get<Components::Velocity>);
     inputs.each([&inputVec, aDt](auto ent, auto& input, auto& phys){
         if (!input.Active)
             return;
 
+        input.InputVector = inputVec;
         phys.Velocity += inputVec * 150.f * aDt;
     });
 
-    // const auto inputExtraEnd = inputs.raw<const Components::PlayerInput>() + inputs.size<const Components::PlayerInput>();
-    // const auto inputExtraBegin = inputs.raw<const Components::PlayerInput>() + inputs.size();
+    const auto inputExtraEnd = inputs.raw<Components::PlayerInput>() + inputs.size<Components::PlayerInput>();
+    const auto inputExtraBegin = inputs.raw<Components::PlayerInput>() + inputs.size();
 
-    // std::for_each(inputExtraBegin, inputExtraEnd, [](auto& input) {
-    //     if (!input.Active)
-    //         return;
-    // });
+    // Store input data even if no physical entity is connected
+    std::for_each(inputExtraBegin, inputExtraEnd, [&inputVec](auto& input) {
+        if (!input.Active)
+            return;
+
+        input.InputVector = inputVec;
+    });
 }
 
 void InputSystem::onInit()
