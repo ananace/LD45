@@ -16,6 +16,7 @@ set(LD45_HEADERS
     BaseSystem.hpp
     DebugView.hpp
     EntityManager.hpp
+    Math.hpp
     ResourceManager.hpp
     StateManager.hpp
     Util.hpp

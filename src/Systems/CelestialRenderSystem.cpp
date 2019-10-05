@@ -6,6 +6,7 @@
 #include "../Components/CelestialBody.hpp"
 #include "../Components/GateShape.hpp"
 #include "../Components/PlanetShape.hpp"
+#include "../Components/Position.hpp"
 #include "../Components/Renderables.hpp"
 #include "../Components/SatteliteBody.hpp"
 #include "../Components/StarField.hpp"
@@ -68,6 +69,30 @@ void CelestialRenderSystem::update(const float aAlpha)
     atmosShader->setUniform("alpha", totalAlpha);
     sf::Shader* coronaShader = m_coronaShader.get();
     coronaShader->setUniform("alpha", totalAlpha);
+    sf::Shader* orbitShader = m_orbitShader.get();
+    orbitShader->setUniform("alpha", totalAlpha);
+
+    {
+    sf::CircleShape orbitCircle(16u);
+    orbitCircle.setFillColor(sf::Color::Transparent);
+    r.view<const SatteliteBody, const Position>().each([orbitShader, &r, &target, &orbitCircle](auto& body, auto& position){
+        auto& orbitPos = r.get<const Position>(body.Orbiting).Position;
+
+        const auto& size1 = target.getView().getSize();
+        const auto& size2 = target.getSize();
+
+        float scale = Util::GetLength({ size1.x / size2.x, size1.y / size2.y });
+
+        auto coords = target.mapCoordsToPixel(orbitPos);
+        orbitShader->setUniform("center", sf::Glsl::Vec4{ float(coords.x), size2.y - float(coords.y), body.Distance / scale * 1.415f, 0.5f });
+
+        orbitCircle.setPosition(orbitPos);
+        orbitCircle.setRadius(body.Distance * 2.f);
+        orbitCircle.setOrigin(body.Distance * 2.f, body.Distance * 2.f);
+
+        target.draw(orbitCircle, orbitShader);
+    });
+    }
 
     sf::CircleShape circle(64u);
     r.group<const Atmosphere>(entt::get<Renderable>).each([atmosShader, &target, &circle, aAlpha](auto& atmos, auto& lerp){
@@ -153,4 +178,5 @@ void CelestialRenderSystem::onInit()
 
     m_atmosphereShader = app.getResourceManager().load<sf::Shader>("Atmosphere");
     m_coronaShader = app.getResourceManager().load<sf::Shader>("Corona");
+    m_orbitShader = app.getResourceManager().load<sf::Shader>("Orbit");
 }

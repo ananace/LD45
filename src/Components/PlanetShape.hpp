@@ -13,6 +13,8 @@ struct PlanetShape
     // enum Type;
 
     PlanetShape() : Size{} { }
+    PlanetShape(float aSize) : Size(aSize) { }
+    PlanetShape(float aSize, const sf::Color& aColor) : Size(aSize), Color(aColor) { }
 };
 
 }

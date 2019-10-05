@@ -21,6 +21,7 @@ Application::Application()
 
     m_resourceManager.addResource<sf::Shader>("Atmosphere", "data/Atmosphere.frag", sf::Shader::Fragment);
     m_resourceManager.addResource<sf::Shader>("Corona", "data/Corona.frag", sf::Shader::Fragment);
+    m_resourceManager.addResource<sf::Shader>("Orbit", "data/Orbit.frag", sf::Shader::Fragment);
 }
 
 Application::~Application()

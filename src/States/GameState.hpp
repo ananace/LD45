@@ -3,6 +3,7 @@
 #include "../BaseState.hpp"
 #include "../EntityManager.hpp"
 
+#include <SFML/System/Vector2.hpp>
 namespace States
 {
 
@@ -19,7 +20,7 @@ public:
     virtual void render(const float aAlpha) override;
 
 private:
-    void createSystem();
+    void createSystem(const sf::Vector2f aCenter = {});
 
     EntityManager m_universeManager,
                   m_foregroundManager;

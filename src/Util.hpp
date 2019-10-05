@@ -2,7 +2,9 @@
 
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Graphics/Font.hpp>
-#include <gsl/gsl_util>
+
+#include <gsl/gsl_assert>
+
 #include <iterator>
 #include <cmath>
 

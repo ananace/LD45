@@ -19,7 +19,8 @@ private:
     void onInit() override;
 
     std::shared_ptr<sf::Shader> m_atmosphereShader,
-                                m_coronaShader;
+                                m_coronaShader,
+                                m_orbitShader;
 };
 
 }

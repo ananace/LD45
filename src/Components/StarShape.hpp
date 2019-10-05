@@ -11,9 +11,9 @@ namespace Components
 
 struct StarShape
 {
-    enum StarType
+    enum StarType : uint8_t
     {
-        Invalid,
+        INVALID,
 
         O,
         B,
@@ -21,7 +21,9 @@ struct StarShape
         F,
         G,
         K,
-        M
+        M,
+
+        MAX
     };
 
     float Size;
@@ -47,7 +49,7 @@ struct StarShape
 
     static inline constexpr uint32_t GetKelvin(StarType aType) {
         switch (aType) {
-        case StarType::Invalid:
+        case StarType::INVALID:
             return 40000;
         case StarType::O:
             return 25000;

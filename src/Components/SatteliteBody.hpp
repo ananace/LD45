@@ -8,9 +8,13 @@ namespace Components
 struct SatteliteBody
 {
     entt::entity Orbiting;
-    float Distance, Speed, Angle;
+    float Distance, Speed;
 
-    SatteliteBody() : Distance{}, Speed{}, Angle{} { }
+    float CurrentAngle;
+
+    SatteliteBody() : Distance{}, Speed{}, CurrentAngle{} { }
+    SatteliteBody(entt::entity aOrbiting, float aDistance, float aSpeed) : Orbiting(aOrbiting), Distance(aDistance), Speed(aSpeed), CurrentAngle{} { }
+    SatteliteBody(entt::entity aOrbiting, float aDistance, float aSpeed, float aCurrentAngle) : Orbiting(aOrbiting), Distance(aDistance), Speed(aSpeed), CurrentAngle(aCurrentAngle) { }
 };
 
 }

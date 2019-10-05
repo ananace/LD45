@@ -34,9 +34,9 @@ void OrbitalSystem::update(const float aDt)
         const auto& orbiting = r.get<const Position>(sattelite.Orbiting);
         const auto& parentPosition = orbiting.Position;
 
-        sattelite.Angle += sattelite.Speed * aDt;
+        sattelite.CurrentAngle += sattelite.Speed * aDt;
 
-        sf::Vector2f direction(std::cos(sattelite.Angle), std::sin(sattelite.Angle));
+        sf::Vector2f direction(std::cos(sattelite.CurrentAngle), std::sin(sattelite.CurrentAngle));
         position.Position = parentPosition + direction * sattelite.Distance;
     });
 
@@ -72,7 +72,7 @@ void OrbitalSystem::orbitSetup(uint8_t aRounds)
             const auto& orbiting = r.get<const Position>(sattelite.Orbiting);
             const auto& parentPosition = orbiting.Position;
 
-            sf::Vector2f direction(std::cos(sattelite.Angle), std::sin(sattelite.Angle));
+            sf::Vector2f direction(std::cos(sattelite.CurrentAngle), std::sin(sattelite.CurrentAngle));
             position.Position = parentPosition + direction * sattelite.Distance;
         });
     }
