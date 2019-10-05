@@ -1,8 +1,11 @@
 #pragma once
 
-#include <SFML/Graphics/RenderWindow.hpp>
 #include "ResourceManager.hpp"
 #include "StateManager.hpp"
+
+#include <SFML/Graphics/RenderWindow.hpp>
+
+#include <chrono>
 
 class Application
 {
@@ -26,11 +29,13 @@ public:
     inline sf::RenderWindow& getRenderWindow() { return m_window; }
     inline ResourceManager& getResourceManager() { return m_resourceManager; }
     inline StateManager& getStateManager() { return m_stateManager; }
+    inline std::chrono::high_resolution_clock::duration getTotalTime() const { return m_total; }
 
     void run();
     void stop();
 
 private:
+    std::chrono::high_resolution_clock::duration m_total;
     sf::RenderWindow m_window;
     sf::View m_defaultView;
     ResourceManager m_resourceManager;

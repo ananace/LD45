@@ -19,6 +19,8 @@ public:
     virtual void render(const float aAlpha) override;
 
 private:
+    void createSystem();
+
     EntityManager m_universeManager,
                   m_foregroundManager;
 };

@@ -46,6 +46,7 @@ set(LD45_HEADERS
     States/MenuState.hpp
 
     Systems/CelestialRenderSystem.hpp
+    Systems/InputSystem.hpp
     Systems/OrbitalSystem.hpp
     Systems/PhysicsSystem.hpp
     Systems/RenderSystem.hpp
@@ -65,6 +66,7 @@ set(LD45_SOURCES
     States/MenuState.cpp
 
     Systems/CelestialRenderSystem.cpp
+    Systems/InputSystem.cpp
     Systems/OrbitalSystem.cpp
     Systems/PhysicsSystem.cpp
     Systems/RenderSystem.cpp

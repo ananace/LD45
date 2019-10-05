@@ -79,14 +79,12 @@ uniform vec4 color;
 uniform float alpha;
 
 void main() {
-    vec2 direction = gl_FragCoord.xy - center.xy;
-    float distance = length(direction);
+    vec2 directionVec = gl_FragCoord.xy - center.xy;
+    float distance = length(directionVec);
 
-    // float mixValue = 1.0 - ((distance - center.z) / (center.w));
-    //float mixValue = (1.0 / (distance * distance) - 0.1) * 0.7;
     if (distance <= center.z)
     {
-        float noise = (snoise(vec3(direction.xy / 7.0, alpha / 4.0)) + 1.0) * 0.5;
+        float noise = (snoise(vec3(directionVec.xy / 7.0, alpha / 4.0)) + 1.0) * 0.5;
         float mixValue = 0.1 + noise * 0.9;
 
         vec4 noisedColor = mix(color, vec4(0.0, 0.0, 0.0, 1.0), mixValue);
@@ -98,10 +96,10 @@ void main() {
         return;
     }
 
-    float mixValue = 1.0 - exp(-(distance - center.z) / center.w);
-    gl_FragColor = mix(color, gl_Color, mixValue);
+    float noise = (1.0 + snoise(vec3(normalize(directionVec), alpha / 4.0))) * 0.5;
+    distance -= noise * 16.0;
 
-    // vec4 coronaColor = mix(color, vec4(1.0, 1.0, 1.0, 1.0), mixValue);
-    // vec4 rgb = mix(coronaColor, vec4(0.0, 0.0, 0.0, 1.0), mixValue);
-    // gl_FragColor = vec4(rgb + color);
+    float mixValue = 1.0 - exp(-(distance - center.z) / center.w);
+
+    gl_FragColor = mix(color, gl_Color, mixValue);
 }

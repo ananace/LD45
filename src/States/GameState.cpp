@@ -44,6 +44,84 @@ void GameState::init()
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::RenderSystem>());
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::UIRenderSystem>());
 
+    createSystem();
+}
+
+void GameState::handleEvent(const sf::Event& aEvent)
+{
+    switch (aEvent.type)
+    {
+    case sf::Event::KeyPressed:
+        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyPressed>>({ aEvent });
+        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyPressed>>({ aEvent });
+        break;
+    case sf::Event::KeyReleased:
+        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyReleased>>({ aEvent });
+        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyReleased>>({ aEvent });
+        break;
+    case sf::Event::MouseButtonPressed:
+        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonPressed>>({ aEvent });
+        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonPressed>>({ aEvent });
+        break;
+    case sf::Event::MouseButtonReleased:
+        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonReleased>>({ aEvent });
+        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonReleased>>({ aEvent });
+        break;
+    case sf::Event::MouseWheelScrolled:
+        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseWheelScrolled>>({ aEvent });
+        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseWheelScrolled>>({ aEvent });
+        break;
+    case sf::Event::MouseMoved:
+        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseMoved>>({ aEvent });
+        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseMoved>>({ aEvent });
+        break;
+
+    default:
+        break;
+    }
+}
+
+void GameState::update(const float aDt)
+{
+    m_foregroundManager.getDispatcher().update();
+    m_foregroundManager.onUpdate(aDt);
+}
+
+void GameState::fixedUpdate(const float aDt)
+{
+    m_universeManager.getDispatcher().update();
+    m_universeManager.onUpdate(aDt);
+}
+
+void GameState::render(const float aAlpha)
+{
+    auto defView = getApplication().getRenderWindow().getView();
+    auto gameView = defView;
+
+    sf::Vector2f cameraPosition;
+    auto& r = m_universeManager.getRegistry();
+    auto v = r.view<const Components::Tags::CameraTag>();
+    v.each([&r, &cameraPosition](auto ent, const auto& _cam) {
+        if (r.has<Components::Renderable>(ent))
+            cameraPosition += r.get<Components::Renderable>(ent).CurrentPosition;
+        else if (r.has<Components::Physical>(ent))
+            cameraPosition += r.get<Components::Physical>(ent).Position;
+    });
+    cameraPosition /= float(v.size());
+
+    gameView.setCenter(cameraPosition);
+    // gameView.zoom(0.25f);
+
+    getApplication().getRenderWindow().setView(gameView);
+
+    m_universeManager.onRender(aAlpha);
+
+    getApplication().getRenderWindow().setView(defView);
+    m_foregroundManager.onRender(aAlpha);
+}
+
+void GameState::createSystem()
+{
     std::uniform_real_distribution<float> randAng(0.f, 6.282f);
     std::random_device rDev;
 
@@ -116,7 +194,7 @@ void GameState::init()
     planet.Color = sf::Color(128, 128, 128);
     sattelite.Orbiting = std::get<0>(earth);
     sattelite.Distance = 45.f;
-    sattelite.Speed = 0.085f;
+    sattelite.Speed = 0.125f;
 
     sattelite.Angle = randAng(rDev);
     }
@@ -154,76 +232,4 @@ void GameState::init()
     // auto uranus = r.create<Components::SatteliteBody, Components::PlanetShape>();
 
     // auto neptune = r.create<Components::SatteliteBody, Components::PlanetShape>();
-}
-
-void GameState::handleEvent(const sf::Event& aEvent)
-{
-    switch (aEvent.type)
-    {
-    case sf::Event::KeyPressed:
-        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyPressed>>({ aEvent });
-        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyPressed>>({ aEvent });
-        break;
-    case sf::Event::KeyReleased:
-        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyReleased>>({ aEvent });
-        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyReleased>>({ aEvent });
-        break;
-    case sf::Event::MouseButtonPressed:
-        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonPressed>>({ aEvent });
-        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonPressed>>({ aEvent });
-        break;
-    case sf::Event::MouseButtonReleased:
-        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonReleased>>({ aEvent });
-        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonReleased>>({ aEvent });
-        break;
-    case sf::Event::MouseWheelScrolled:
-        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseWheelScrolled>>({ aEvent });
-        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseWheelScrolled>>({ aEvent });
-        break;
-    case sf::Event::MouseMoved:
-        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseMoved>>({ aEvent });
-        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseMoved>>({ aEvent });
-        break;
-
-    default:
-        break;
-    }
-}
-
-void GameState::update(const float aDt)
-{
-    m_foregroundManager.getDispatcher().update();
-    m_foregroundManager.onUpdate(aDt);
-}
-
-void GameState::fixedUpdate(const float aDt)
-{
-    m_universeManager.getDispatcher().update();
-    m_universeManager.onUpdate(aDt);
-}
-
-void GameState::render(const float aAlpha)
-{
-    auto defView = getApplication().getRenderWindow().getView();
-    auto gameView = defView;
-
-    sf::Vector2f cameraPosition;
-    auto& r = m_universeManager.getRegistry();
-    auto v = r.view<const Components::Tags::CameraTag>();
-    v.each([&r, &cameraPosition](auto ent, const auto& _cam) {
-        if (r.has<Components::Renderable>(ent))
-            cameraPosition += r.get<Components::Renderable>(ent).CurrentPosition;
-        else if (r.has<Components::Physical>(ent))
-            cameraPosition += r.get<Components::Physical>(ent).Position;
-    });
-    cameraPosition /= float(v.size());
-
-    gameView.setCenter(cameraPosition);
-
-    getApplication().getRenderWindow().setView(gameView);
-
-    m_universeManager.onRender(aAlpha);
-
-    getApplication().getRenderWindow().setView(defView);
-    m_foregroundManager.onRender(aAlpha);
 }

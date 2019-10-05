@@ -13,12 +13,14 @@
 #include <thread>
 
 Application::Application()
+    : m_total{}
 {
     m_window.create(sf::VideoMode(1366, 768), "LD45");
     // m_window.setVerticalSyncEnabled(true);
     m_defaultView = m_window.getDefaultView();
 
-    m_resourceManager.addResource<sf::Shader>("Atomsphere", "data/Atmosphere.frag", sf::Shader::Fragment);
+    m_resourceManager.addResource<sf::Shader>("Atmosphere", "data/Atmosphere.frag", sf::Shader::Fragment);
+    m_resourceManager.addResource<sf::Shader>("Corona", "data/Corona.frag", sf::Shader::Fragment);
 }
 
 Application::~Application()
@@ -29,7 +31,7 @@ void Application::run()
 {
     m_stateManager.init(this);
 
-    m_stateManager.pushState(std::make_unique<States::MenuState>());
+    m_stateManager.pushState(std::make_unique<States::GameState>());
 
     using clock = std::chrono::high_resolution_clock;
     constexpr std::chrono::nanoseconds ticklength(1000000000 / kTickRate);
@@ -49,6 +51,8 @@ void Application::run()
 
         auto dt = clock::now() - lastFrame;
         lastFrame = clock::now();
+        m_total += dt;
+
         std::chrono::duration<float> dt_s(dt);
 
         accumulator += std::chrono::nanoseconds(dt);
