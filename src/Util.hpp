@@ -30,6 +30,15 @@ namespace Util
         return { aVec.x / len, aVec.y / len };
     }
 
+    inline sf::Vector2f GetWithLength(const sf::Vector2f& aVec, float aLength)
+    {
+        if (GSL_UNLIKELY(aVec.x == 0 && aVec.y == 0))
+            return aVec;
+
+        float len = aLength / GetLength(aVec);
+        return { aVec.x * len, aVec.y * len };
+    }
+
     inline float GetDotProduct(const sf::Vector2f& aVec1, const sf::Vector2f& aVec2)
     {
         return aVec1.x * aVec2.x + aVec1.y * aVec2.y;

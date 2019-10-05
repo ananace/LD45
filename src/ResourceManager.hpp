@@ -47,7 +47,7 @@ public:
         if (m_loadedResources.count(aName) > 0)
         {
             auto& weakptr = m_loadedResources.at(aName);
-            std::shared_ptr<void*> loaded;
+            std::shared_ptr<void> loaded;
             if (!weakptr.expired())
                 loaded = weakptr.lock();
 
@@ -78,5 +78,5 @@ private:
     std::shared_ptr<T> loadDefinition(const ResourceDefinition& aFile);
 
     std::unordered_map<entt::hashed_string::hash_type, ResourceDefinition> m_registeredResources;
-    std::unordered_map<entt::hashed_string::hash_type, std::weak_ptr<void *>> m_loadedResources;
+    std::unordered_map<entt::hashed_string::hash_type, std::weak_ptr<void>> m_loadedResources;
 };

@@ -2,8 +2,10 @@
 #include "BaseState.hpp"
 #include "DebugView.hpp"
 
+#include "States/GameState.hpp"
 #include "States/MenuState.hpp"
 
+#include <SFML/Graphics/Shader.hpp>
 #include <SFML/Window/Event.hpp>
 #include <gsl/gsl_util>
 
@@ -14,6 +16,8 @@ Application::Application()
 {
     m_window.create(sf::VideoMode(1366, 768), "LD45");
     m_defaultView = m_window.getDefaultView();
+
+    m_resourceManager.addResource<sf::Shader>("Atomsphere", "data/Atmosphere.frag", sf::Shader::Fragment);
 }
 
 Application::~Application()
@@ -24,7 +28,7 @@ void Application::run()
 {
     m_stateManager.init(this);
 
-    m_stateManager.pushState(std::make_unique<States::MenuState>());
+    m_stateManager.pushState(std::make_unique<States::GameState>());
 
     using clock = std::chrono::high_resolution_clock;
     constexpr std::chrono::nanoseconds ticklength(1000000000 / kTickRate);

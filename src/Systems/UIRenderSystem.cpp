@@ -114,7 +114,7 @@ void UIRenderSystem::onMouseMove(const Events::InputEvent<sf::Event::MouseMoved>
     sf::Vector2f mousePos{ float(ev.Event.mouseMove.x), float(ev.Event.mouseMove.y) };
     sf::Vector2f viewSize = getApplication().getRenderWindow().getView().getSize();
 
-    r.view<UIButton>().each([&viewSize, &mousePos](auto ent, auto& button) {
+    r.view<UIButton>().each([&viewSize, &mousePos](auto& button) {
         auto rect = button.Position;
         if (rect.left < 0)
             rect.left += viewSize.x;
@@ -138,7 +138,7 @@ void UIRenderSystem::onMousePress(const Events::InputEvent<sf::Event::MouseButto
     sf::Vector2f mousePos{ float(ev.Event.mouseButton.x), float(ev.Event.mouseButton.y) };
     sf::Vector2f viewSize = getApplication().getRenderWindow().getView().getSize();
 
-    r.view<UIButton>().each([&viewSize, &mousePos](auto ent, auto& button) {
+    r.view<UIButton>().each([&viewSize, &mousePos](auto& button) {
         auto rect = button.Position;
         if (rect.left < 0)
             rect.left += viewSize.x;
@@ -162,7 +162,7 @@ void UIRenderSystem::onMouseRelease(const Events::InputEvent<sf::Event::MouseBut
     sf::Vector2f mousePos{ float(ev.Event.mouseButton.x), float(ev.Event.mouseButton.y) };
     sf::Vector2f viewSize = getApplication().getRenderWindow().getView().getSize();
 
-    r.view<UIButton>().each([&d, &viewSize, &mousePos](auto ent, auto& button) {
+    r.view<UIButton>().each([&d, &viewSize, &mousePos](auto& button) {
         auto rect = button.Position;
         if (rect.left < 0)
             rect.left += viewSize.x;

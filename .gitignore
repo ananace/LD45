@@ -3,6 +3,7 @@
 .idea
 .kdev4
 *.kdev4
+.clangd
 
 # CMake
 build*/

@@ -11,7 +11,10 @@ public:
     PhysicsSystem();
     ~PhysicsSystem();
 
-    virtual void update(const float aDt);
+    virtual void update(const float aDt) override;
+
+private:
+    void onInit() override;
 };
 
 }

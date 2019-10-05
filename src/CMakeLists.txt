@@ -20,13 +20,29 @@ set(LD45_HEADERS
     StateManager.hpp
     Util.hpp
 
-    Components/Acceleration.hpp
-    Components/Friction.hpp
-    Components/Physical.hpp
-    Components/Renderables.hpp
+    Components/Tags/InFaction.hpp
+    Components/Tags/InSystem.hpp
 
+    Components/Acceleration.hpp
+    Components/CelestialBody.hpp
+    Components/Friction.hpp
+    Components/GateShape.hpp
+    Components/GravityWell.hpp
+    Components/HoleShape.hpp
+    Components/Physical.hpp
+    Components/PlanetShape.hpp
+    Components/Renderables.hpp
+    Components/SatteliteBody.hpp
+    Components/StarShape.hpp
+    Components/StationShape.hpp
+    Components/TradeJump.hpp
+    Components/UIButton.hpp
+
+    States/GameState.hpp
     States/MenuState.hpp
 
+    Systems/CelestialRenderSystem.hpp
+    Systems/OrbitalSystem.hpp
     Systems/PhysicsSystem.hpp
     Systems/RenderSystem.hpp
     Systems/UIRenderSystem.hpp
@@ -41,8 +57,11 @@ set(LD45_SOURCES
     ResourceManager.cpp
     StateManager.cpp
 
+    States/GameState.cpp
     States/MenuState.cpp
 
+    Systems/CelestialRenderSystem.cpp
+    Systems/OrbitalSystem.cpp
     Systems/PhysicsSystem.cpp
     Systems/RenderSystem.cpp
     Systems/UIRenderSystem.cpp

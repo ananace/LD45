@@ -26,4 +26,10 @@ struct LerpedRenderable
     float Angle, LastAngle;
 };
 
+struct LerpedDirectRenderable
+{
+    sf::Vector2f Position, LastPosition;
+    float Angle, LastAngle;
+};
+
 }
