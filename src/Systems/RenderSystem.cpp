@@ -27,46 +27,29 @@ void RenderSystem::update(const float aAlpha)
 
     auto& target = app.getRenderWindow();
 
-    for (auto& ent : r.view<LerpedRenderable>())
-    {
-        auto& renderable = r.get<LerpedRenderable>(ent);
-        if (GSL_LIKELY(r.has<Physical>(ent)))
+    r.view<Physical, Renderable>().each([aAlpha, &r, &target](auto ent, auto& phys, auto& renderable) {
+        if (phys.Position != renderable.Position)
         {
-            auto& phys = r.get<Physical>(ent);
-
-            if (phys.Position != renderable.Position)
-            {
-                renderable.LastPosition = renderable.Position;
-                renderable.Position = phys.Position;
-            }
-
-            if (phys.Angle != renderable.Angle)
-            {
-                renderable.LastAngle = renderable.Angle;
-                renderable.Angle = phys.Angle;
-            }
+            renderable.LastPosition = renderable.Position;
+            renderable.Position = phys.Position;
         }
 
-        auto pos = Util::GetLerped(aAlpha, renderable.LastPosition, renderable.Position);
-        auto ang = Util::GetLerped(aAlpha, renderable.LastAngle, renderable.Angle);
+        if (phys.Angle != renderable.Angle)
+        {
+            renderable.LastAngle = renderable.Angle;
+            renderable.Angle = phys.Angle;
+        }
+
+        renderable.CurrentPosition = Util::GetLerped(aAlpha, renderable.LastPosition, renderable.Position);
+        renderable.CurrentAngle = Util::GetLerped(aAlpha, renderable.LastAngle, renderable.Angle);
 
         sf::RenderStates states;
         states.transform
-            .translate(pos)
-            .rotate(ang);
+            .translate(renderable.CurrentPosition)
+            .rotate(renderable.CurrentAngle);
 
-        target.draw(*renderable.Drawable, states);
-    }
-    for (auto& ent : r.view<Renderable>())
-    {
-        auto& renderable = r.get<Renderable>(ent);
-
-        sf::RenderStates states;
-        states.transform
-            .translate(renderable.Position)
-            .rotate(renderable.Angle);
-
-        target.draw(*renderable.Drawable, states);
-    }
+        if (r.has<DrawableRenderable>(ent))
+            target.draw(*r.get<DrawableRenderable>(ent).Drawable, states);
+    });
 }
 

@@ -3,6 +3,7 @@
 #include "DebugView.hpp"
 #include "Util.hpp"
 
+#include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/Text.hpp>
 
@@ -45,7 +46,6 @@ void DebugView::endFrame()
     if (std::chrono::high_resolution_clock::now() - m_lastDraw > std::chrono::seconds(1))
     {
         m_lastDraw = std::chrono::high_resolution_clock::now();
-        std::array<char, 2048> debugBuf;
 
         const int fps = m_frameCounter;
         const int ups = m_updateCounter;
@@ -64,7 +64,7 @@ void DebugView::endFrame()
                 curstate = stateptr->getName();
         }
 
-        auto len = snprintf(debugBuf.data(), debugBuf.size(),
+        auto len = snprintf(m_debugString.data(), m_debugString.size(),
                  "=== [Debug] ===\n\nFPS: %d\nUPS: %d\n\n--- Frames: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal >=%dms: %ld\n\n--- Updates: ---\nShortest: %ldms\nLongest:  %ldms\nAverage:  %.2fms\nTotal >=%dms: %ld\n\n--- Fonts: ---\nMonospace: %s\nRegular:   %s\n\n--- Application: ---\nCurrent State: %s\n",
                  fps,
                  ups,
@@ -82,7 +82,6 @@ void DebugView::endFrame()
                  regular.c_str(),
                  curstate.c_str());
 
-        m_debugString = std::string(debugBuf.data(), len);
         softReset();
     }
 }
@@ -128,7 +127,6 @@ void DebugView::reset()
     m_lastDraw = std::chrono::high_resolution_clock::now();
     m_curFrameStart = m_lastDraw;
     m_curUpdateStart = m_lastDraw;
-    m_debugString.clear();
 }
 
 void DebugView::softReset()
@@ -145,7 +143,10 @@ void DebugView::draw(sf::RenderTarget& aTarget, sf::RenderStates states) const
 {
     auto font = Util::GetDefaultFont(Font_Monospace);
 
-    sf::Text debugString(m_debugString, font, 10u);
+    sf::Text debugString(m_debugString.data(), font, 10u);
+    debugString.setFillColor(sf::Color::White);
+    debugString.setOutlineColor(sf::Color::Black);
+    debugString.setOutlineThickness(1.f);
     debugString.setPosition(10, 10);
 
     aTarget.draw(debugString, states);

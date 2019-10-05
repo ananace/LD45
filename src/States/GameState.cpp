@@ -4,6 +4,7 @@
 #include "../Components/Tags/CameraTag.hpp"
 #include "../Components/Atmosphere.hpp"
 #include "../Components/CelestialBody.hpp"
+#include "../Components/Physical.hpp"
 #include "../Components/PlanetShape.hpp"
 #include "../Components/Renderables.hpp"
 #include "../Components/SatteliteBody.hpp"
@@ -46,7 +47,7 @@ void GameState::init()
 
     auto& r = m_universeManager.getRegistry();
 
-    auto sol = r.create<Components::CelestialBody, Components::StarShape, Components::LerpedDirectRenderable, Components::Atmosphere>();
+    auto sol = r.create<Components::CelestialBody, Components::StarShape, Components::Renderable, Components::Atmosphere>();
     auto& celestial = std::get<1>(sol);
     auto& star = std::get<2>(sol);
     auto& lerp = std::get<3>(sol);
@@ -59,7 +60,7 @@ void GameState::init()
     lerp.LastPosition = celestial.Position;
     lerp.Position = celestial.Position;
 
-    auto mercury = r.create<Components::SatteliteBody, Components::PlanetShape, Components::LerpedDirectRenderable>();
+    auto mercury = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable>();
     {
     auto& sattelite = std::get<1>(mercury);
     auto& planet = std::get<2>(mercury);
@@ -73,7 +74,7 @@ void GameState::init()
     sattelite.Angle = randAng(rDev);
     }
 
-    auto venus = r.create<Components::SatteliteBody, Components::PlanetShape, Components::LerpedDirectRenderable>();
+    auto venus = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable>();
     {
     auto& sattelite = std::get<1>(venus);
     auto& planet = std::get<2>(venus);
@@ -87,7 +88,7 @@ void GameState::init()
     sattelite.Angle = randAng(rDev);
     }
 
-    auto earth = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Atmosphere, Components::LerpedDirectRenderable>();
+    auto earth = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Atmosphere, Components::Renderable>();
     {
     auto& sattelite = std::get<1>(earth);
     auto& planet = std::get<2>(earth);
@@ -106,7 +107,7 @@ void GameState::init()
     sattelite.Angle = randAng(rDev);
     }
 
-    auto luna = r.create<Components::SatteliteBody, Components::PlanetShape, Components::LerpedDirectRenderable, Components::Tags::CameraTag>();
+    auto luna = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable, Components::Tags::CameraTag>();
     {
     auto& sattelite = std::get<1>(luna);
     auto& planet = std::get<2>(luna);
@@ -120,7 +121,7 @@ void GameState::init()
     sattelite.Angle = randAng(rDev);
     }
 
-    auto mars = r.create<Components::SatteliteBody, Components::PlanetShape, Components::LerpedDirectRenderable>();
+    auto mars = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable>();
     {
     auto& sattelite = std::get<1>(mars);
     auto& planet = std::get<2>(mars);
@@ -134,7 +135,7 @@ void GameState::init()
     sattelite.Angle = randAng(rDev);
     }
 
-    auto jupiter = r.create<Components::SatteliteBody, Components::PlanetShape, Components::LerpedDirectRenderable>();
+    auto jupiter = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable>();
     {
     auto& sattelite = std::get<1>(jupiter);
     auto& planet = std::get<2>(jupiter);
@@ -197,12 +198,10 @@ void GameState::render(const float aAlpha)
     auto& r = m_universeManager.getRegistry();
     auto v = r.view<const Components::Tags::CameraTag>();
     v.each([&r, &cameraPosition](auto ent, const auto& _cam) {
-        if (r.has<Components::LerpedDirectRenderable>(ent))
-            cameraPosition += r.get<Components::LerpedDirectRenderable>(ent).CurrentPosition;
-        else if (r.has<Components::LerpedRenderable>(ent))
-            cameraPosition += r.get<Components::LerpedRenderable>(ent).CurrentPosition;
-        else if (r.has<Components::Renderable>(ent))
-            cameraPosition += r.get<Components::Renderable>(ent).Position;
+        if (r.has<Components::Renderable>(ent))
+            cameraPosition += r.get<Components::Renderable>(ent).CurrentPosition;
+        else if (r.has<Components::Physical>(ent))
+            cameraPosition += r.get<Components::Physical>(ent).Position;
     });
     cameraPosition /= float(v.size());
 

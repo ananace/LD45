@@ -9,27 +9,15 @@ namespace Components
 
 struct Renderable
 {
-    Renderable() : Angle{} {}
-
-    sf::Vector2f Position;
-    float Angle;
-
-    sf::Drawable* Drawable;
-};
-
-struct LerpedRenderable
-{
-    sf::Drawable* Drawable;
-    // sf::Transformable* Transformable;
+    Renderable() : Angle{}, LastAngle{}, CurrentAngle{} { }
 
     sf::Vector2f Position, LastPosition, CurrentPosition;
-    float Angle, LastAngle;
+    float Angle, LastAngle, CurrentAngle;
 };
 
-struct LerpedDirectRenderable
+struct DrawableRenderable
 {
-    sf::Vector2f Position, LastPosition, CurrentPosition;
-    float Angle, LastAngle;
+    sf::Drawable* Drawable;
 };
 
 }

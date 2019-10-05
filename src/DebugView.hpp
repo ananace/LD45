@@ -15,7 +15,7 @@ class DebugView : public sf::Drawable
 public:
     enum
     {
-        kFramesToCalc = 100,
+        kFramesToCalc = 50,
         kLongFrameTimeMS = 15,
         kLongUpdateTimeMS = 5
     };
@@ -58,5 +58,6 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> m_lastDraw,
         m_curFrameStart,
         m_curUpdateStart;
-    std::string m_debugString;
+
+    std::array<char, 2048> m_debugString;
 };

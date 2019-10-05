@@ -33,14 +33,14 @@ void CelestialRenderSystem::update(const float aAlpha)
 
     auto& target = app.getRenderWindow();
 
-    r.view<CelestialBody, LerpedDirectRenderable>().each([](auto& star, auto& lerp) {
+    r.view<CelestialBody, Renderable>().each([](auto& star, auto& lerp) {
         if (star.Position != lerp.Position)
         {
             lerp.LastPosition = lerp.Position;
             lerp.Position = star.Position;
         }
     });
-    r.view<SatteliteBody, LerpedDirectRenderable>().each([](auto& star, auto& lerp) {
+    r.view<SatteliteBody, Renderable>().each([](auto& star, auto& lerp) {
         if (star.CalculatedPosition != lerp.Position)
         {
             lerp.LastPosition = lerp.Position;
@@ -50,7 +50,7 @@ void CelestialRenderSystem::update(const float aAlpha)
 
     sf::Shader* atmosShader = m_atmosphereShader.get();
     sf::CircleShape circle;
-    r.view<Atmosphere, LerpedDirectRenderable>().each([atmosShader, &target, &circle, aAlpha](auto& atmos, auto& lerp){
+    r.view<Atmosphere, Renderable>().each([atmosShader, &target, &circle, aAlpha](auto& atmos, auto& lerp){
         lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         circle.setFillColor(sf::Color::Transparent);
@@ -69,7 +69,7 @@ void CelestialRenderSystem::update(const float aAlpha)
 
         target.draw(circle, atmosShader);
     });
-    r.view<StarShape, LerpedDirectRenderable>().each([&target, &circle, aAlpha](auto& star, auto& lerp){
+    r.view<StarShape, Renderable>().each([&target, &circle, aAlpha](auto& star, auto& lerp){
         lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         circle.setFillColor(star.CalculatedColor);
@@ -79,7 +79,7 @@ void CelestialRenderSystem::update(const float aAlpha)
 
         target.draw(circle);
     });
-    r.view<PlanetShape, LerpedDirectRenderable>().each([&target, &circle, aAlpha](auto& planet, auto& lerp){
+    r.view<PlanetShape, Renderable>().each([&target, &circle, aAlpha](auto& planet, auto& lerp){
         lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         circle.setFillColor(planet.Color);
@@ -90,7 +90,7 @@ void CelestialRenderSystem::update(const float aAlpha)
         target.draw(circle);
     });
 
-    r.view<PlanetShape, LerpedDirectRenderable>();
+    r.view<PlanetShape, Renderable>();
 }
 
 void CelestialRenderSystem::onInit()
