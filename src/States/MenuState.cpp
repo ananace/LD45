@@ -1,6 +1,8 @@
 #include "MenuState.hpp"
 
 #include "../Components/UIButton.hpp"
+#include "../Components/UIComponent.hpp"
+#include "../Components/UIDialog.hpp"
 #include "../Components/Renderables.hpp"
 
 #include "../Events/InputEvent.hpp"
@@ -31,10 +33,26 @@ void MenuState::init()
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::RenderSystem>());
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::UIRenderSystem>());
 
-    addButton("Play");
-    auto& q = addButton("Quit");
-    q.Position.top += 50;
-    q.Color = { 128, 64, 64 };
+    auto& r = m_foregroundManager.getRegistry();
+
+    auto menuDial = r.create<Components::UIComponent, Components::UIDialog>();
+    {
+        auto& uid = std::get<2>(menuDial);
+        auto& uic = std::get<1>(menuDial);
+
+        uid.Color = sf::Color(0, 128, 128, 196);
+        uic.Position = { -300, -270, 170, 100 };
+    }
+
+    auto p = addButton("Play");
+    std::get<1>(p).Parent = std::get<0>(menuDial);
+
+    auto q = addButton("Quit");
+    auto& uib = std::get<2>(q);
+    auto& uic = std::get<1>(q);
+    uic.Parent = std::get<0>(menuDial);
+    uic.Position.top += 50;
+    uib.Color = { 128, 64, 64 };
 }
 
 void MenuState::handleEvent(const sf::Event& aEvent)
@@ -76,14 +94,17 @@ void MenuState::render(const float aAlpha)
     m_foregroundManager.onRender(aAlpha);
 }
 
-Components::UIButton& MenuState::addButton(const std::string& aTitle)
+std::tuple<entt::entity, Components::UIComponent&, Components::UIButton&> MenuState::addButton(const std::string& aTitle)
 {
     auto& r = m_foregroundManager.getRegistry();
 
-    auto button = r.create();
-    auto& uib = r.assign<Components::UIButton>(button, aTitle);
-    uib.Color = { 64, 128, 64 };
-    uib.Position = { -250, 150, 150, 30 };
+    auto button = r.create<Components::UIComponent, Components::UIButton>();
+    auto& uib = std::get<2>(button);
+    auto& uic = std::get<1>(button);
 
-    return uib;
+    uib.Text = aTitle;
+    uib.Color = { 64, 128, 64 };
+    uic.Position = { 10, 10, 150, 30 };
+
+    return button;
 }

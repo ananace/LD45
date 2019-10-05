@@ -39,6 +39,8 @@ set(LD45_HEADERS
     Components/StationShape.hpp
     Components/TradeJump.hpp
     Components/UIButton.hpp
+    Components/UIComponent.hpp
+    Components/UIDialog.hpp
 
     States/GameState.hpp
     States/MenuState.hpp
