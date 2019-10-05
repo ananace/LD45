@@ -18,6 +18,7 @@
 #include <SFML/Graphics/VertexArray.hpp>
 
 #include <array>
+#include <chrono>
 #include <gsl/gsl_util>
 
 #include <random>
@@ -74,7 +75,8 @@ void CelestialRenderSystem::update(const float aAlpha)
     });
 
     sf::Shader* atmosShader = m_atmosphereShader.get();
-    sf::CircleShape circle;
+    sf::Shader* coronaShader = m_coronaShader.get();
+    sf::CircleShape circle(64u);
     r.view<Atmosphere, Renderable>().each([atmosShader, &target, &circle, aAlpha](auto& atmos, auto& lerp){
         lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
@@ -94,15 +96,33 @@ void CelestialRenderSystem::update(const float aAlpha)
 
         target.draw(circle, atmosShader);
     });
-    r.view<StarShape, Renderable>().each([&target, &circle, aAlpha](auto& star, auto& lerp){
+    r.view<StarShape, Renderable>().each([coronaShader, &app, &target, &circle, aAlpha](auto& star, auto& lerp){
         lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
-        circle.setFillColor(star.CalculatedColor);
-        circle.setRadius(star.Size);
-        circle.setOrigin(star.Size, star.Size);
+        const auto& size1 = target.getView().getSize();
+        const auto& size2 = target.getSize();
+
+        float scale = Util::GetLength({ size1.x / size2.x, size1.y / size2.y });
+        float totalAlpha = std::chrono::duration<float>(app.getTotalTime()).count();
+
+        auto coords = target.mapCoordsToPixel(lerp.CurrentPosition);
+        coronaShader->setUniform("center", sf::Glsl::Vec4{ float(coords.x), size2.y - float(coords.y), star.Size / scale, (star.Size * 1.25f) / scale });
+        coronaShader->setUniform("color", sf::Glsl::Vec4(star.CalculatedColor));
+        coronaShader->setUniform("alpha", totalAlpha);
+
+        circle.setFillColor(sf::Color::Transparent);
+        circle.setRadius(star.Size * 3.f);
+        circle.setOrigin(star.Size * 3.f, star.Size * 3.f);
         circle.setPosition(lerp.CurrentPosition);
 
-        target.draw(circle);
+        target.draw(circle, coronaShader);
+
+        // circle.setFillColor(star.CalculatedColor);
+        // circle.setRadius(star.Size);
+        // circle.setOrigin(star.Size, star.Size);
+        // circle.setPosition(lerp.CurrentPosition);
+
+        // target.draw(circle);
     });
     r.view<PlanetShape, Renderable>().each([&target, &circle, aAlpha](auto& planet, auto& lerp){
         lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
@@ -121,5 +141,6 @@ void CelestialRenderSystem::onInit()
 {
     auto& app = getApplication();
 
-    m_atmosphereShader = app.getResourceManager().load<sf::Shader>("Atomsphere");
+    m_atmosphereShader = app.getResourceManager().load<sf::Shader>("Atmosphere");
+    m_coronaShader = app.getResourceManager().load<sf::Shader>("Corona");
 }

@@ -49,17 +49,13 @@ void GameState::init()
 
     auto& r = m_universeManager.getRegistry();
 
-    auto sol = r.create<Components::CelestialBody, Components::StarShape, Components::Renderable, Components::Atmosphere, Components::Tags::SystemCore, Components::StarField>();
+    auto sol = r.create<Components::CelestialBody, Components::StarShape, Components::Renderable, Components::Tags::SystemCore, Components::StarField, Components::Tags::CameraTag>();
     auto& celestial = std::get<1>(sol);
     auto& star = std::get<2>(sol);
     auto& lerp = std::get<3>(sol);
-    auto& atmos = std::get<4>(sol);
-    auto& field = std::get<6>(sol);
+    auto& field = std::get<5>(sol);
 
     field.FieldSize = sf::FloatRect{ -2000, -2000, 4000, 4000 };
-    atmos.InnerSize = 100.f;
-    atmos.OuterSize = 175.f;
-    atmos.Color = star.CalculatedColor;
     star.Size = 100.f;
     lerp.LastPosition = celestial.Position;
     lerp.Position = celestial.Position;
@@ -165,15 +161,29 @@ void GameState::handleEvent(const sf::Event& aEvent)
     switch (aEvent.type)
     {
     case sf::Event::KeyPressed:
-        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyPressed>>({ aEvent }); break;
+        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyPressed>>({ aEvent });
+        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyPressed>>({ aEvent });
+        break;
     case sf::Event::KeyReleased:
-        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyReleased>>({ aEvent }); break;
+        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyReleased>>({ aEvent });
+        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyReleased>>({ aEvent });
+        break;
     case sf::Event::MouseButtonPressed:
-        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonPressed>>({ aEvent }); break;
+        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonPressed>>({ aEvent });
+        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonPressed>>({ aEvent });
+        break;
     case sf::Event::MouseButtonReleased:
-        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonReleased>>({ aEvent }); break;
+        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonReleased>>({ aEvent });
+        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonReleased>>({ aEvent });
+        break;
+    case sf::Event::MouseWheelScrolled:
+        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseWheelScrolled>>({ aEvent });
+        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseWheelScrolled>>({ aEvent });
+        break;
     case sf::Event::MouseMoved:
-        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseMoved>>({ aEvent }); break;
+        m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseMoved>>({ aEvent });
+        m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseMoved>>({ aEvent });
+        break;
 
     default:
         break;
@@ -182,14 +192,13 @@ void GameState::handleEvent(const sf::Event& aEvent)
 
 void GameState::update(const float aDt)
 {
+    m_foregroundManager.getDispatcher().update();
     m_foregroundManager.onUpdate(aDt);
 }
 
 void GameState::fixedUpdate(const float aDt)
 {
     m_universeManager.getDispatcher().update();
-    m_foregroundManager.getDispatcher().update();
-
     m_universeManager.onUpdate(aDt);
 }
 
