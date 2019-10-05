@@ -51,41 +51,41 @@ void CelestialRenderSystem::update(const float aAlpha)
     sf::Shader* atmosShader = m_atmosphereShader.get();
     sf::CircleShape circle;
     r.view<Atmosphere, LerpedDirectRenderable>().each([atmosShader, &target, &circle, aAlpha](auto& atmos, auto& lerp){
-        auto pos = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
+        lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         circle.setFillColor(sf::Color::Transparent);
         circle.setRadius(atmos.OuterSize);
         circle.setOrigin(atmos.OuterSize, atmos.OuterSize);
-        circle.setPosition(pos);
+        circle.setPosition(lerp.CurrentPosition);
 
         const auto& size1 = target.getView().getSize();
         const auto& size2 = target.getSize();
 
         float scale = Util::GetLength({ size1.x / size2.x, size1.y / size2.y });
 
-        auto coords = target.mapCoordsToPixel(pos);
+        auto coords = target.mapCoordsToPixel(lerp.CurrentPosition);
         atmosShader->setUniform("center", sf::Glsl::Vec4{ float(coords.x), size2.y - float(coords.y), atmos.InnerSize / scale, atmos.OuterSize / scale });
         atmosShader->setUniform("color", sf::Glsl::Vec4(atmos.Color));
 
         target.draw(circle, atmosShader);
     });
     r.view<StarShape, LerpedDirectRenderable>().each([&target, &circle, aAlpha](auto& star, auto& lerp){
-        auto pos = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
+        lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         circle.setFillColor(star.CalculatedColor);
         circle.setRadius(star.Size);
         circle.setOrigin(star.Size, star.Size);
-        circle.setPosition(pos);
+        circle.setPosition(lerp.CurrentPosition);
 
         target.draw(circle);
     });
     r.view<PlanetShape, LerpedDirectRenderable>().each([&target, &circle, aAlpha](auto& planet, auto& lerp){
-        auto pos = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
+        lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         circle.setFillColor(planet.Color);
         circle.setRadius(planet.Size);
         circle.setOrigin(planet.Size, planet.Size);
-        circle.setPosition(pos);
+        circle.setPosition(lerp.CurrentPosition);
 
         target.draw(circle);
     });

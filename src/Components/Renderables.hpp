@@ -22,13 +22,13 @@ struct LerpedRenderable
     sf::Drawable* Drawable;
     // sf::Transformable* Transformable;
 
-    sf::Vector2f Position, LastPosition;
+    sf::Vector2f Position, LastPosition, CurrentPosition;
     float Angle, LastAngle;
 };
 
 struct LerpedDirectRenderable
 {
-    sf::Vector2f Position, LastPosition;
+    sf::Vector2f Position, LastPosition, CurrentPosition;
     float Angle, LastAngle;
 };
 

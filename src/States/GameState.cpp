@@ -1,6 +1,7 @@
 #include "GameState.hpp"
 #include "../Application.hpp"
 
+#include "../Components/Tags/CameraTag.hpp"
 #include "../Components/Atmosphere.hpp"
 #include "../Components/CelestialBody.hpp"
 #include "../Components/PlanetShape.hpp"
@@ -17,8 +18,6 @@
 #include <random>
 
 using States::GameState;
-
-entt::entity eee;
 
 GameState::GameState()
     : BaseState("Game")
@@ -89,7 +88,6 @@ void GameState::init()
     }
 
     auto earth = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Atmosphere, Components::LerpedDirectRenderable>();
-    eee = std::get<0>(earth);
     {
     auto& sattelite = std::get<1>(earth);
     auto& planet = std::get<2>(earth);
@@ -108,7 +106,7 @@ void GameState::init()
     sattelite.Angle = randAng(rDev);
     }
 
-    auto luna = r.create<Components::SatteliteBody, Components::PlanetShape, Components::LerpedDirectRenderable>();
+    auto luna = r.create<Components::SatteliteBody, Components::PlanetShape, Components::LerpedDirectRenderable, Components::Tags::CameraTag>();
     {
     auto& sattelite = std::get<1>(luna);
     auto& planet = std::get<2>(luna);
@@ -193,14 +191,24 @@ void GameState::fixedUpdate(const float aDt)
 void GameState::render(const float aAlpha)
 {
     auto defView = getApplication().getRenderWindow().getView();
+    auto gameView = defView;
 
-    auto zoomedView = defView;
-    // zoomedView.zoom(2.5f);
-    // zoomedView.setCenter(0,0);
-    const auto& body = m_universeManager.getRegistry().get<Components::SatteliteBody>(eee);
-    zoomedView.setCenter(body.CalculatedPosition);
+    sf::Vector2f cameraPosition;
+    auto& r = m_universeManager.getRegistry();
+    auto v = r.view<const Components::Tags::CameraTag>();
+    v.each([&r, &cameraPosition](auto ent, const auto& _cam) {
+        if (r.has<Components::LerpedDirectRenderable>(ent))
+            cameraPosition += r.get<Components::LerpedDirectRenderable>(ent).CurrentPosition;
+        else if (r.has<Components::LerpedRenderable>(ent))
+            cameraPosition += r.get<Components::LerpedRenderable>(ent).CurrentPosition;
+        else if (r.has<Components::Renderable>(ent))
+            cameraPosition += r.get<Components::Renderable>(ent).Position;
+    });
+    cameraPosition /= float(v.size());
 
-    getApplication().getRenderWindow().setView(zoomedView);
+    gameView.setCenter(cameraPosition);
+
+    getApplication().getRenderWindow().setView(gameView);
 
     m_universeManager.onRender(aAlpha);
 

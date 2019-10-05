@@ -20,6 +20,7 @@ set(LD45_HEADERS
     StateManager.hpp
     Util.hpp
 
+    Components/Tags/CameraTag.hpp
     Components/Tags/InFaction.hpp
     Components/Tags/InSystem.hpp
 
