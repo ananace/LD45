@@ -74,15 +74,20 @@ void CelestialRenderSystem::update(const float aAlpha)
         target.draw(field.CalculatedStars.data(), field.CalculatedStars.size(), sf::Points);
     });
 
+    float totalAlpha = std::chrono::duration<float>(app.getTotalTime()).count();
+
     sf::Shader* atmosShader = m_atmosphereShader.get();
+    atmosShader->setUniform("alpha", totalAlpha);
     sf::Shader* coronaShader = m_coronaShader.get();
+    coronaShader->setUniform("alpha", totalAlpha);
+
     sf::CircleShape circle(64u);
     r.view<Atmosphere, Renderable>().each([atmosShader, &target, &circle, aAlpha](auto& atmos, auto& lerp){
         lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         circle.setFillColor(sf::Color::Transparent);
-        circle.setRadius(atmos.OuterSize);
-        circle.setOrigin(atmos.OuterSize, atmos.OuterSize);
+        circle.setRadius(atmos.OuterSize * 2.f);
+        circle.setOrigin(atmos.OuterSize * 2.f, atmos.OuterSize * 2.f);
         circle.setPosition(lerp.CurrentPosition);
 
         const auto& size1 = target.getView().getSize();
@@ -96,19 +101,17 @@ void CelestialRenderSystem::update(const float aAlpha)
 
         target.draw(circle, atmosShader);
     });
-    r.view<StarShape, Renderable>().each([coronaShader, &app, &target, &circle, aAlpha](auto& star, auto& lerp){
+    r.view<StarShape, Renderable>().each([coronaShader, &target, &circle, aAlpha](auto& star, auto& lerp){
         lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         const auto& size1 = target.getView().getSize();
         const auto& size2 = target.getSize();
 
         float scale = Util::GetLength({ size1.x / size2.x, size1.y / size2.y });
-        float totalAlpha = std::chrono::duration<float>(app.getTotalTime()).count();
 
         auto coords = target.mapCoordsToPixel(lerp.CurrentPosition);
         coronaShader->setUniform("center", sf::Glsl::Vec4{ float(coords.x), size2.y - float(coords.y), star.Size / scale, (star.Size * 1.25f) / scale });
         coronaShader->setUniform("color", sf::Glsl::Vec4(star.CalculatedColor));
-        coronaShader->setUniform("alpha", totalAlpha);
 
         circle.setFillColor(sf::Color::Transparent);
         circle.setRadius(star.Size * 3.f);

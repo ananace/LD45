@@ -95,7 +95,7 @@ void GameState::init()
     auto& atmosphere = std::get<3>(earth);
 
     atmosphere.InnerSize = 15.f;
-    atmosphere.OuterSize = 30.f;
+    atmosphere.OuterSize = 35.f;
     atmosphere.Color = sf::Color(188, 188, 255);
 
     planet.Size = 15.f;
