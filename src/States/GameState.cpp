@@ -60,6 +60,9 @@ void GameState::init()
     auto& phy = std::get<2>(player);
     auto& rend = std::get<3>(player);
     auto& fric = std::get<4>(player);
+    auto& cam = std::get<7>(player);
+
+    cam.Influence = 2;
     fric.Friction = 0.25f;
     pl.Color = sf::Color::White;
     pl.Size = 5.f;
