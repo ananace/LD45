@@ -4,7 +4,7 @@
 #include "../Components/Tags/InSystem.hpp"
 #include "../Components/Tags/SystemCore.hpp"
 #include "../Components/GravityWell.hpp"
-#include "../Components/Physical.hpp"
+#include "../Components/Position.hpp"
 #include "../Components/CelestialBody.hpp"
 #include "../Components/SatteliteBody.hpp"
 
@@ -30,33 +30,24 @@ void OrbitalSystem::update(const float aDt)
     // r.view<Physical,GravityWell>()
 
     // Heavily simplified orbital mechanics
-    r.view<SatteliteBody>().each([aDt, &r](auto& sattelite) {
-        sf::Vector2f parentPosition;
-        if (r.has<CelestialBody>(sattelite.Orbiting))
-        {
-            const auto& orbiting = r.get<const CelestialBody>(sattelite.Orbiting);
-            parentPosition = orbiting.Position;
-        }
-        else
-        {
-            const auto& orbiting = r.get<const SatteliteBody>(sattelite.Orbiting);
-            parentPosition = orbiting.CalculatedPosition;
-        }
+    r.group<SatteliteBody>(entt::get<Position>).each([aDt, &r](auto& sattelite, auto& position) {
+        const auto& orbiting = r.get<const Position>(sattelite.Orbiting);
+        const auto& parentPosition = orbiting.Position;
 
         sattelite.Angle += sattelite.Speed * aDt;
 
         sf::Vector2f direction(std::cos(sattelite.Angle), std::sin(sattelite.Angle));
-        sattelite.CalculatedPosition = parentPosition + direction * sattelite.Distance;
+        position.Position = parentPosition + direction * sattelite.Distance;
     });
+
+    // Ensure stellar modifications trickle down to sattelites
+    orbitSetup();
 
     // Ensure far objects are detached from their system
     systemExclusion();
 
     // Ensure nearby objects are attached to the system
     systemInclusion();
-
-    // Ensure stellar modifications trickle down to sattelites
-    orbitSetup();
 }
 
 void OrbitalSystem::onInit()
@@ -77,22 +68,12 @@ void OrbitalSystem::orbitSetup(uint8_t aRounds)
 
     for (; aRounds > 0; --aRounds)
     {
-        r.view<SatteliteBody>().each([&r](auto& sattelite) {
-            sf::Vector2f parentPosition;
-
-            if (r.has<CelestialBody>(sattelite.Orbiting))
-            {
-                const auto& orbiting = r.get<const CelestialBody>(sattelite.Orbiting);
-                parentPosition = orbiting.Position;
-            }
-            else
-            {
-                const auto& orbiting = r.get<const SatteliteBody>(sattelite.Orbiting);
-                parentPosition = orbiting.CalculatedPosition;
-            }
+        r.group<SatteliteBody>(entt::get<Position>).each([&r](auto& sattelite, auto& position) {
+            const auto& orbiting = r.get<const Position>(sattelite.Orbiting);
+            const auto& parentPosition = orbiting.Position;
 
             sf::Vector2f direction(std::cos(sattelite.Angle), std::sin(sattelite.Angle));
-            sattelite.CalculatedPosition = parentPosition + direction * sattelite.Distance;
+            position.Position = parentPosition + direction * sattelite.Distance;
         });
     }
 }
@@ -101,12 +82,12 @@ void OrbitalSystem::systemExclusion()
 {
     auto& r = getRegistry();
 
-    r.group<const Components::Tags::SystemCore, const Components::CelestialBody>().each([&r](auto systemEnt, const auto& core, const auto& body) {
-        r.group<const Components::Tags::InSystem, const Components::Physical>().each([systemEnt, &r, &body](auto ent, const auto& sys, const auto& physical) {
+    r.group<const Components::Tags::SystemCore>(entt::get<const Components::Position>).each([&r](auto systemEnt, const auto& core, const auto& body) {
+        r.group<const Components::Tags::InSystem>(entt::get<const Components::Position>).each([systemEnt, &r, &body](auto ent, const auto& sys, const auto& position) {
             if (sys.System != systemEnt)
                 return;
 
-            auto distance = Util::GetLength(physical.Position - body.Position);
+            auto distance = Util::GetLength(position.Position - body.Position);
 
             if (distance >= kSystemSize)
                 r.remove<Components::Tags::InSystem>(ent);
@@ -118,9 +99,9 @@ void OrbitalSystem::systemInclusion()
 {
     auto& r = getRegistry();
 
-    r.group<const Components::Tags::SystemCore, const Components::CelestialBody>().each([&r](auto systemEnt, const auto& core, const auto& body) {
-        r.group<const Components::Physical>(entt::exclude<Components::Tags::InSystem>).each([systemEnt, &r, &body](auto ent, const auto& physical) {
-            auto distance = Util::GetLength(physical.Position - body.Position);
+    r.group<const Components::Tags::SystemCore>(entt::get<const Components::Position>).each([&r](auto systemEnt, const auto& core, const auto& body) {
+        r.group<>(entt::get<const Components::Position>, entt::exclude<Components::Tags::InSystem>).each([systemEnt, &r, &body](auto ent, const auto& position) {
+            auto distance = Util::GetLength(position.Position - body.Position);
 
             if (distance < kSystemSize)
                 r.assign<Components::Tags::InSystem>(ent, systemEnt);

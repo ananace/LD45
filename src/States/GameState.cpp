@@ -5,19 +5,25 @@
 #include "../Components/Tags/SystemCore.hpp"
 #include "../Components/Atmosphere.hpp"
 #include "../Components/CelestialBody.hpp"
-#include "../Components/Physical.hpp"
+#include "../Components/Friction.hpp"
+#include "../Components/Position.hpp"
 #include "../Components/PlanetShape.hpp"
+#include "../Components/PlayerInput.hpp"
 #include "../Components/Renderables.hpp"
 #include "../Components/SatteliteBody.hpp"
 #include "../Components/StarField.hpp"
 #include "../Components/StarShape.hpp"
+#include "../Components/Velocity.hpp"
 
 #include "../Systems/CelestialRenderSystem.hpp"
+#include "../Systems/InputSystem.hpp"
 #include "../Systems/OrbitalSystem.hpp"
 #include "../Systems/PhysicsSystem.hpp"
 #include "../Systems/RenderSystem.hpp"
 #include "../Systems/UIRenderSystem.hpp"
 
+#include <SFML/Graphics/Color.hpp>
+#include <algorithm>
 #include <random>
 
 using States::GameState;
@@ -36,6 +42,7 @@ void GameState::init()
     m_universeManager.init(&getApplication());
     m_foregroundManager.init(&getApplication());
 
+    m_universeManager.addSystem(std::make_unique<Systems::InputSystem>());
     m_universeManager.addSystem(std::make_unique<Systems::OrbitalSystem>());
     m_universeManager.addSystem(std::make_unique<Systems::PhysicsSystem>());
     m_universeManager.addRenderSystem(std::make_unique<Systems::CelestialRenderSystem>());
@@ -45,6 +52,21 @@ void GameState::init()
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::UIRenderSystem>());
 
     createSystem();
+
+    auto& r = m_universeManager.getRegistry();
+
+    auto player = r.create<Components::PlanetShape, Components::Position, Components::Renderable, Components::Friction, Components::Velocity, Components::PlayerInput, Components::Tags::CameraTag>();
+    auto& pl = std::get<1>(player);
+    auto& phy = std::get<2>(player);
+    auto& rend = std::get<3>(player);
+    auto& fric = std::get<4>(player);
+    fric.Friction = 0.25f;
+    pl.Color = sf::Color::White;
+    pl.Size = 5.f;
+    phy.Position.x = 500;
+    phy.Position.y = 500;
+    rend.Position = phy.Position;
+    rend.LastPosition = phy.Position;
 }
 
 void GameState::handleEvent(const sf::Event& aEvent)
@@ -99,15 +121,22 @@ void GameState::render(const float aAlpha)
     auto gameView = defView;
 
     sf::Vector2f cameraPosition;
+    size_t cameraSources{};
+
     auto& r = m_universeManager.getRegistry();
-    auto v = r.view<const Components::Tags::CameraTag>();
-    v.each([&r, &cameraPosition](auto ent, const auto& _cam) {
-        if (r.has<Components::Renderable>(ent))
-            cameraPosition += r.get<Components::Renderable>(ent).CurrentPosition;
-        else if (r.has<Components::Physical>(ent))
-            cameraPosition += r.get<Components::Physical>(ent).Position;
+    auto v = r.group<const Components::Tags::CameraTag>(entt::get<const Components::Renderable>);
+    v.each([&cameraSources, &cameraPosition](auto ent, const auto& cam, const auto& renderable) {
+        cameraPosition += renderable.CurrentPosition * float(cam.Influence);
+        cameraSources += cam.Influence;
     });
-    cameraPosition /= float(v.size());
+    const auto vExtraEnd = v.raw<const Components::Tags::CameraTag>() + v.size<const Components::Tags::CameraTag>();
+    const auto vExtraBegin = v.raw<const Components::Tags::CameraTag>() + v.size();
+
+    std::for_each(vExtraBegin, vExtraEnd, [&r, &cameraSources, cameraPosition](auto& cam) {
+        // auto ent = r.entity(cam);
+    });
+
+    cameraPosition /= float(cameraSources);
 
     gameView.setCenter(cameraPosition);
     // gameView.zoom(0.25f);
@@ -127,18 +156,19 @@ void GameState::createSystem()
 
     auto& r = m_universeManager.getRegistry();
 
-    auto sol = r.create<Components::CelestialBody, Components::StarShape, Components::Renderable, Components::Tags::SystemCore, Components::StarField, Components::Tags::CameraTag>();
+    auto sol = r.create<Components::CelestialBody, Components::StarShape, Components::Renderable, Components::Tags::SystemCore, Components::StarField, Components::Position>();
     auto& celestial = std::get<1>(sol);
     auto& star = std::get<2>(sol);
     auto& lerp = std::get<3>(sol);
     auto& field = std::get<5>(sol);
+    auto& position = std::get<6>(sol);
 
     field.FieldSize = sf::FloatRect{ -2000, -2000, 4000, 4000 };
     star.Size = 100.f;
-    lerp.LastPosition = celestial.Position;
-    lerp.Position = celestial.Position;
+    lerp.LastPosition = position.Position;
+    lerp.Position = position.Position;
 
-    auto mercury = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable>();
+    auto mercury = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable, Components::Position>();
     {
     auto& sattelite = std::get<1>(mercury);
     auto& planet = std::get<2>(mercury);
@@ -152,7 +182,7 @@ void GameState::createSystem()
     sattelite.Angle = randAng(rDev);
     }
 
-    auto venus = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable>();
+    auto venus = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable, Components::Position>();
     {
     auto& sattelite = std::get<1>(venus);
     auto& planet = std::get<2>(venus);
@@ -166,7 +196,7 @@ void GameState::createSystem()
     sattelite.Angle = randAng(rDev);
     }
 
-    auto earth = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Atmosphere, Components::Renderable>();
+    auto earth = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Atmosphere, Components::Renderable, Components::Position>();
     {
     auto& sattelite = std::get<1>(earth);
     auto& planet = std::get<2>(earth);
@@ -185,7 +215,7 @@ void GameState::createSystem()
     sattelite.Angle = randAng(rDev);
     }
 
-    auto luna = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable, Components::Tags::CameraTag>();
+    auto luna = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable, Components::Position>();
     {
     auto& sattelite = std::get<1>(luna);
     auto& planet = std::get<2>(luna);
@@ -199,7 +229,7 @@ void GameState::createSystem()
     sattelite.Angle = randAng(rDev);
     }
 
-    auto mars = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable>();
+    auto mars = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable, Components::Position>();
     {
     auto& sattelite = std::get<1>(mars);
     auto& planet = std::get<2>(mars);
@@ -213,7 +243,7 @@ void GameState::createSystem()
     sattelite.Angle = randAng(rDev);
     }
 
-    auto jupiter = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable>();
+    auto jupiter = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Renderable, Components::Position>();
     {
     auto& sattelite = std::get<1>(jupiter);
     auto& planet = std::get<2>(jupiter);

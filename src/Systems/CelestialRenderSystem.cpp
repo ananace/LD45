@@ -40,21 +40,6 @@ void CelestialRenderSystem::update(const float aAlpha)
 
     auto& target = app.getRenderWindow();
 
-    r.view<CelestialBody, Renderable>().each([](auto& star, auto& lerp) {
-        if (star.Position != lerp.Position)
-        {
-            lerp.LastPosition = lerp.Position;
-            lerp.Position = star.Position;
-        }
-    });
-    r.view<SatteliteBody, Renderable>().each([](auto& star, auto& lerp) {
-        if (star.CalculatedPosition != lerp.Position)
-        {
-            lerp.LastPosition = lerp.Position;
-            lerp.Position = star.CalculatedPosition;
-        }
-    });
-
     std::random_device rDev;
 
     r.view<StarField>().each([&rDev, &target](auto& field) {
@@ -82,7 +67,7 @@ void CelestialRenderSystem::update(const float aAlpha)
     coronaShader->setUniform("alpha", totalAlpha);
 
     sf::CircleShape circle(64u);
-    r.view<Atmosphere, Renderable>().each([atmosShader, &target, &circle, aAlpha](auto& atmos, auto& lerp){
+    r.group<const Atmosphere>(entt::get<Renderable>).each([atmosShader, &target, &circle, aAlpha](auto& atmos, auto& lerp){
         lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         circle.setFillColor(sf::Color::Transparent);
@@ -101,7 +86,7 @@ void CelestialRenderSystem::update(const float aAlpha)
 
         target.draw(circle, atmosShader);
     });
-    r.view<StarShape, Renderable>().each([coronaShader, &target, &circle, aAlpha](auto& star, auto& lerp){
+    r.group<const StarShape>(entt::get<Renderable>).each([coronaShader, &target, &circle, aAlpha](auto& star, auto& lerp){
         lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         const auto& size1 = target.getView().getSize();
@@ -127,7 +112,7 @@ void CelestialRenderSystem::update(const float aAlpha)
 
         // target.draw(circle);
     });
-    r.view<PlanetShape, Renderable>().each([&target, &circle, aAlpha](auto& planet, auto& lerp){
+    r.group<const PlanetShape>(entt::get<Renderable>).each([&target, &circle, aAlpha](auto& planet, auto& lerp){
         lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         circle.setFillColor(planet.Color);

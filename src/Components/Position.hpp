@@ -5,10 +5,9 @@
 namespace Components
 {
 
-struct Physical
+struct Position
 {
-    sf::Vector2f Position, Velocity;
-    float Angle;
+    sf::Vector2f Position;
 };
 
 }

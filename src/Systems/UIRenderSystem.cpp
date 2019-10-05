@@ -169,7 +169,7 @@ void UIRenderSystem::onMouseMove(const Events::InputEvent<sf::Event::MouseMoved>
     sf::Vector2f mousePos{ float(ev.Event.mouseMove.x), float(ev.Event.mouseMove.y) };
     sf::Vector2f viewSize = getApplication().getRenderWindow().getView().getSize();
 
-    r.group<const UIComponent, UIButton>().each([&viewSize, &mousePos](auto& comp, auto& button) {
+    r.view<const UIComponent, UIButton>().each([&viewSize, &mousePos](auto& comp, auto& button) {
         auto& rect = comp.CalculatedPosition;
         bool hovered = rect.contains(mousePos);
 
@@ -188,7 +188,7 @@ void UIRenderSystem::onMousePress(const Events::InputEvent<sf::Event::MouseButto
     sf::Vector2f mousePos{ float(ev.Event.mouseButton.x), float(ev.Event.mouseButton.y) };
     sf::Vector2f viewSize = getApplication().getRenderWindow().getView().getSize();
 
-    r.group<const UIComponent, UIButton>().each([&viewSize, &mousePos](auto& comp, auto& button) {
+    r.view<const UIComponent, UIButton>().each([&viewSize, &mousePos](auto& comp, auto& button) {
         auto& rect = comp.CalculatedPosition;
         bool hovered = rect.contains(mousePos);
 
@@ -208,7 +208,7 @@ void UIRenderSystem::onMouseRelease(const Events::InputEvent<sf::Event::MouseBut
     sf::Vector2f mousePos{ float(ev.Event.mouseButton.x), float(ev.Event.mouseButton.y) };
     sf::Vector2f viewSize = getApplication().getRenderWindow().getView().getSize();
 
-    r.group<const UIComponent, UIButton>().each([&d, &viewSize, &mousePos](auto& comp, auto& button) {
+    r.view<const UIComponent, UIButton>().each([&d, &viewSize, &mousePos](auto& comp, auto& button) {
         auto& rect = comp.CalculatedPosition;
         bool hovered = rect.contains(mousePos);
 

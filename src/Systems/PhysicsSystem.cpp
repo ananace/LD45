@@ -3,18 +3,19 @@
 
 #include "../Components/Acceleration.hpp"
 #include "../Components/Friction.hpp"
-#include "../Components/Physical.hpp"
+#include "../Components/Position.hpp"
 #include "../Components/TradeJump.hpp"
+#include "../Components/Velocity.hpp"
 
 using Systems::PhysicsSystem;
 using namespace Components;
 
 void onTradeJumpDestroy(entt::entity aShip, entt::registry& aReg)
 {
-    auto physical = aReg.get<Physical>(aShip);
+    auto velocity = aReg.get<Velocity>(aShip);
 
     // Drop the trade speed
-    physical.Velocity = Util::GetWithLength(physical.Velocity, 300.f);
+    velocity.Velocity = Util::GetWithLength(velocity.Velocity, 300.f);
 }
 
 PhysicsSystem::PhysicsSystem()
@@ -34,18 +35,22 @@ void PhysicsSystem::update(const float aDt)
 {
     auto& r = getRegistry();
 
-    r.view<TradeJump, Physical>().each([aDt](auto& tradeJump, auto& physical) {
+    r.group<const TradeJump>(entt::get<const Position, Velocity>).each([&r, aDt](auto& tradeJump, auto& physical, auto& velocity) {
         auto direction = Util::GetNormalized(tradeJump.TargetPosition - physical.Position);
-        physical.Velocity = Util::GetLerped(0.5f, physical.Velocity, direction * 3000.f);
+        velocity.Velocity = Util::GetLerped(0.5f, velocity.Velocity, direction * 3000.f);
     });
+    // r.group<const TradeJump, const Position>(entt::exclude<Components::Velocity>).each([&r, aDt](auto ent, auto& tradeJump, auto& physical) {
+    //     auto direction = Util::GetNormalized(tradeJump.TargetPosition - physical.Position);
+    //     r.assign<Components::Velocity>(ent, direction * 3000.f);
+    // });
 
-    r.view<Friction, Physical>().each([aDt](auto& friction, auto& velocity) {
+    r.group<const Friction>(entt::get<Velocity>).each([aDt](auto& friction, auto& velocity) {
         velocity.Velocity -= velocity.Velocity * (friction.Friction * aDt);
     });
-    r.view<Acceleration, Physical>().each([aDt](auto& accel, auto& velocity) {
+    r.group<const Acceleration>(entt::get<Velocity>).each([aDt](auto& accel, auto& velocity) {
         velocity.Velocity += accel.Acceleration * aDt;
     });
-    r.view<Physical>().each([aDt](auto& physical) {
-        physical.Position += physical.Velocity * aDt;
+    r.group<const Velocity>(entt::get<Position>).each([aDt](auto& velocity, auto& position) {
+        position.Position += velocity.Velocity * aDt;
     });
 }

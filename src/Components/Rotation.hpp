@@ -3,6 +3,9 @@
 namespace Components
 {
 
-struct CelestialBody { };
+struct Rotation
+{
+    float Angle;
+};
 
 }
