@@ -5,14 +5,10 @@
 namespace Components
 {
 
-struct PlanetShape
+struct Atmosphere
 {
-    float Size;
+    float InnerSize, OuterSize;
     sf::Color Color;
-
-    // enum Type;
-
-    PlanetShape() : Size{} { }
 };
 
 }

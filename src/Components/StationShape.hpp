@@ -13,6 +13,8 @@ struct StationShape
     std::string DrawableName;
 
     sf::Drawable* Drawable;
+
+    StationShape() : Size{}, Drawable{} { }
 };
 
 }

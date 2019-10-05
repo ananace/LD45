@@ -1,16 +1,20 @@
 #include "GameState.hpp"
 #include "../Application.hpp"
 
+#include "../Components/Atmosphere.hpp"
 #include "../Components/CelestialBody.hpp"
+#include "../Components/PlanetShape.hpp"
+#include "../Components/Renderables.hpp"
 #include "../Components/SatteliteBody.hpp"
 #include "../Components/StarShape.hpp"
-#include "../Components/PlanetShape.hpp"
 
 #include "../Systems/CelestialRenderSystem.hpp"
 #include "../Systems/OrbitalSystem.hpp"
 #include "../Systems/PhysicsSystem.hpp"
 #include "../Systems/RenderSystem.hpp"
 #include "../Systems/UIRenderSystem.hpp"
+
+#include <random>
 
 using States::GameState;
 
@@ -36,66 +40,108 @@ void GameState::init()
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::RenderSystem>());
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::UIRenderSystem>());
 
+    std::uniform_real_distribution<float> randAng(0.f, 6.282f);
+    std::random_device rDev;
 
     auto& r = m_universeManager.getRegistry();
 
-    auto sol = r.create<Components::CelestialBody, Components::StarShape>();
+    auto sol = r.create<Components::CelestialBody, Components::StarShape, Components::LerpedDirectRenderable>();
     auto& celestial = std::get<1>(sol);
     auto& star = std::get<2>(sol);
+    auto& lerp = std::get<3>(sol);
 
-    celestial.Position = getApplication().getRenderWindow().getView().getCenter();
+    star.Size = 100.f;
+    lerp.LastPosition = celestial.Position;
+    lerp.Position = celestial.Position;
 
-    auto mercury = r.create<Components::SatteliteBody, Components::PlanetShape>();
+    auto mercury = r.create<Components::SatteliteBody, Components::PlanetShape, Components::LerpedDirectRenderable>();
+    {
     auto& sattelite = std::get<1>(mercury);
     auto& planet = std::get<2>(mercury);
 
-    planet.Size = 2.439f;
+    planet.Size = 5.f;
     planet.Color = sf::Color(128, 128, 128);
     sattelite.Orbiting = std::get<0>(sol);
-    sattelite.Distance = 57908;
-    sattelite.Speed = 47.3f;
+    sattelite.Distance = 150.f;
+    sattelite.Speed = 0.025f;
 
-    auto venus = r.create<Components::SatteliteBody, Components::PlanetShape>();
-    sattelite = std::get<1>(venus);
-    planet = std::get<2>(venus);
+    sattelite.Angle = randAng(rDev);
+    }
 
-    planet.Size = 6.051f;
+    auto venus = r.create<Components::SatteliteBody, Components::PlanetShape, Components::LerpedDirectRenderable>();
+    {
+    auto& sattelite = std::get<1>(venus);
+    auto& planet = std::get<2>(venus);
+
+    planet.Size = 8.f;
     planet.Color = sf::Color(158, 158, 128);
     sattelite.Orbiting = std::get<0>(sol);
-    sattelite.Distance = 108208;
-    sattelite.Speed = 35.02f;
+    sattelite.Distance = 200.f;
+    sattelite.Speed = 0.030f;
 
-    auto earth = r.create<Components::SatteliteBody, Components::PlanetShape>();
-    sattelite = std::get<1>(earth);
-    planet = std::get<2>(earth);
+    sattelite.Angle = randAng(rDev);
+    }
 
-    planet.Size = 6.371f;
+    auto earth = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Atmosphere, Components::LerpedDirectRenderable>();
+    {
+    auto& sattelite = std::get<1>(earth);
+    auto& planet = std::get<2>(earth);
+    auto& atmosphere = std::get<3>(earth);
+
+    atmosphere.InnerSize = 15.f;
+    atmosphere.OuterSize = 45.f;
+    atmosphere.Color = sf::Color(188, 188, 255);
+
+    planet.Size = 15.f;
     planet.Color = sf::Color(158, 158, 228);
     sattelite.Orbiting = std::get<0>(sol);
-    sattelite.Distance = 149597;
-    sattelite.Speed = 29.78f;
+    sattelite.Distance = 500.f;
+    sattelite.Speed = 0.045f;
 
-    auto luna = r.create<Components::SatteliteBody, Components::PlanetShape>();
-    sattelite = std::get<1>(luna);
-    planet = std::get<2>(luna);
+    sattelite.Angle = randAng(rDev);
+    }
 
-    planet.Size = 1.737f;
+    auto luna = r.create<Components::SatteliteBody, Components::PlanetShape, Components::LerpedDirectRenderable>();
+    {
+    auto& sattelite = std::get<1>(luna);
+    auto& planet = std::get<2>(luna);
+
+    planet.Size = 5.f;
     planet.Color = sf::Color(128, 128, 128);
     sattelite.Orbiting = std::get<0>(earth);
-    sattelite.Distance = 383;
-    sattelite.Speed = 1.022f;
+    sattelite.Distance = 45.f;
+    sattelite.Speed = 0.085f;
 
-    auto mars = r.create<Components::SatteliteBody, Components::PlanetShape>();
-    sattelite = std::get<1>(mars);
-    planet = std::get<2>(mars);
+    sattelite.Angle = randAng(rDev);
+    }
 
-    planet.Size = 3.389f;
+    auto mars = r.create<Components::SatteliteBody, Components::PlanetShape, Components::LerpedDirectRenderable>();
+    {
+    auto& sattelite = std::get<1>(mars);
+    auto& planet = std::get<2>(mars);
+
+    planet.Size = 12.f;
+    planet.Color = sf::Color(228, 198, 96);
+    sattelite.Orbiting = std::get<0>(sol);
+    sattelite.Distance = 700.f;
+    sattelite.Speed = 0.040f;
+
+    sattelite.Angle = randAng(rDev);
+    }
+
+    auto jupiter = r.create<Components::SatteliteBody, Components::PlanetShape, Components::LerpedDirectRenderable>();
+    {
+    auto& sattelite = std::get<1>(jupiter);
+    auto& planet = std::get<2>(jupiter);
+
+    planet.Size = 25.f;
     planet.Color = sf::Color(228, 198, 128);
     sattelite.Orbiting = std::get<0>(sol);
-    sattelite.Distance = 227950;
-    sattelite.Speed = 24.007f;
+    sattelite.Distance = 750.f;
+    sattelite.Speed = 0.030f;
 
-    // auto jupiter = r.create<Components::SatteliteBody, Components::PlanetShape>();
+    sattelite.Angle = randAng(rDev);
+    }
 
     // auto saturn = r.create<Components::SatteliteBody, Components::PlanetShape>();
 
@@ -142,7 +188,8 @@ void GameState::render(const float aAlpha)
     auto defView = getApplication().getRenderWindow().getView();
 
     auto zoomedView = defView;
-    zoomedView.zoom(0.5f);
+    zoomedView.zoom(2.5f);
+    zoomedView.setCenter(0,0);
     getApplication().getRenderWindow().setView(zoomedView);
 
     m_universeManager.onRender(aAlpha);

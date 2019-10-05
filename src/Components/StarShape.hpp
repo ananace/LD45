@@ -29,7 +29,8 @@ struct StarShape
     uint32_t Temperature;
 
     // Defaulting to sun-like
-    StarShape(float aSize = 695.5f, StarType aType = StarType::G) : Size(aSize), Type(aType) {
+    StarShape() : StarShape(100.f, StarType::K) { }
+    StarShape(float aSize, StarType aType) : Size(aSize), Type(aType) {
         uint32_t lower = GetKelvin(Type);
         uint32_t upper = GetKelvin(StarType(Type - 1));
 

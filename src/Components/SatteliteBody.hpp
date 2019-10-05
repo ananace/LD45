@@ -12,6 +12,8 @@ struct SatteliteBody
     float Distance, Speed, Angle;
 
     sf::Vector2f CalculatedPosition;
+
+    SatteliteBody() : Distance{}, Speed{}, Angle{} { }
 };
 
 }

@@ -24,6 +24,7 @@ set(LD45_HEADERS
     Components/Tags/InSystem.hpp
 
     Components/Acceleration.hpp
+    Components/Atmosphere.hpp
     Components/CelestialBody.hpp
     Components/Friction.hpp
     Components/GateShape.hpp

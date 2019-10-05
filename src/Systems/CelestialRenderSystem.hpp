@@ -18,7 +18,7 @@ public:
 private:
     void onInit() override;
 
-    std::shared_ptr<sf::Shader> m_atomsphereShader;
+    std::shared_ptr<sf::Shader> m_atmosphereShader;
 };
 
 }
