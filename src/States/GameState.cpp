@@ -18,6 +18,8 @@
 
 using States::GameState;
 
+entt::entity eee;
+
 GameState::GameState()
     : BaseState("Game")
 {
@@ -45,11 +47,15 @@ void GameState::init()
 
     auto& r = m_universeManager.getRegistry();
 
-    auto sol = r.create<Components::CelestialBody, Components::StarShape, Components::LerpedDirectRenderable>();
+    auto sol = r.create<Components::CelestialBody, Components::StarShape, Components::LerpedDirectRenderable, Components::Atmosphere>();
     auto& celestial = std::get<1>(sol);
     auto& star = std::get<2>(sol);
     auto& lerp = std::get<3>(sol);
+    auto& atmos = std::get<4>(sol);
 
+    atmos.InnerSize = 100.f;
+    atmos.OuterSize = 175.f;
+    atmos.Color = star.CalculatedColor;
     star.Size = 100.f;
     lerp.LastPosition = celestial.Position;
     lerp.Position = celestial.Position;
@@ -83,13 +89,14 @@ void GameState::init()
     }
 
     auto earth = r.create<Components::SatteliteBody, Components::PlanetShape, Components::Atmosphere, Components::LerpedDirectRenderable>();
+    eee = std::get<0>(earth);
     {
     auto& sattelite = std::get<1>(earth);
     auto& planet = std::get<2>(earth);
     auto& atmosphere = std::get<3>(earth);
 
     atmosphere.InnerSize = 15.f;
-    atmosphere.OuterSize = 45.f;
+    atmosphere.OuterSize = 30.f;
     atmosphere.Color = sf::Color(188, 188, 255);
 
     planet.Size = 15.f;
@@ -188,8 +195,11 @@ void GameState::render(const float aAlpha)
     auto defView = getApplication().getRenderWindow().getView();
 
     auto zoomedView = defView;
-    zoomedView.zoom(2.5f);
-    zoomedView.setCenter(0,0);
+    // zoomedView.zoom(2.5f);
+    // zoomedView.setCenter(0,0);
+    const auto& body = m_universeManager.getRegistry().get<Components::SatteliteBody>(eee);
+    zoomedView.setCenter(body.CalculatedPosition);
+
     getApplication().getRenderWindow().setView(zoomedView);
 
     m_universeManager.onRender(aAlpha);
