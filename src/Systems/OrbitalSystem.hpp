@@ -10,6 +10,10 @@ namespace Systems
 class OrbitalSystem : public BaseSystem
 {
 public:
+    enum {
+        kSystemSize = 10000,
+    };
+
     OrbitalSystem();
     ~OrbitalSystem();
 

@@ -108,7 +108,7 @@ void OrbitalSystem::systemExclusion()
 
             auto distance = Util::GetLength(physical.Position - body.Position);
 
-            if (distance >= 10000)
+            if (distance >= kSystemSize)
                 r.remove<Components::Tags::InSystem>(ent);
         });
     });
@@ -122,7 +122,7 @@ void OrbitalSystem::systemInclusion()
         r.group<const Components::Physical>(entt::exclude<Components::Tags::InSystem>).each([systemEnt, &r, &body](auto ent, const auto& physical) {
             auto distance = Util::GetLength(physical.Position - body.Position);
 
-            if (distance < 10000)
+            if (distance < kSystemSize)
                 r.assign<Components::Tags::InSystem>(ent, systemEnt);
         });
     });
