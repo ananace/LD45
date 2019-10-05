@@ -2,12 +2,14 @@
 #include "../Application.hpp"
 
 #include "../Components/Tags/CameraTag.hpp"
+#include "../Components/Tags/SystemCore.hpp"
 #include "../Components/Atmosphere.hpp"
 #include "../Components/CelestialBody.hpp"
 #include "../Components/Physical.hpp"
 #include "../Components/PlanetShape.hpp"
 #include "../Components/Renderables.hpp"
 #include "../Components/SatteliteBody.hpp"
+#include "../Components/StarField.hpp"
 #include "../Components/StarShape.hpp"
 
 #include "../Systems/CelestialRenderSystem.hpp"
@@ -47,12 +49,14 @@ void GameState::init()
 
     auto& r = m_universeManager.getRegistry();
 
-    auto sol = r.create<Components::CelestialBody, Components::StarShape, Components::Renderable, Components::Atmosphere>();
+    auto sol = r.create<Components::CelestialBody, Components::StarShape, Components::Renderable, Components::Atmosphere, Components::Tags::SystemCore, Components::StarField>();
     auto& celestial = std::get<1>(sol);
     auto& star = std::get<2>(sol);
     auto& lerp = std::get<3>(sol);
     auto& atmos = std::get<4>(sol);
+    auto& field = std::get<6>(sol);
 
+    field.FieldSize = sf::FloatRect{ -2000, -2000, 4000, 4000 };
     atmos.InnerSize = 100.f;
     atmos.OuterSize = 175.f;
     atmos.Color = star.CalculatedColor;

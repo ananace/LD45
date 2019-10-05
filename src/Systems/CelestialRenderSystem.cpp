@@ -7,14 +7,20 @@
 #include "../Components/PlanetShape.hpp"
 #include "../Components/Renderables.hpp"
 #include "../Components/SatteliteBody.hpp"
+#include "../Components/StarField.hpp"
 #include "../Components/StarShape.hpp"
 #include "../Components/StationShape.hpp"
 
+#include "gsl/gsl_assert"
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/Shader.hpp>
+#include <SFML/Graphics/Vertex.hpp>
+#include <SFML/Graphics/VertexArray.hpp>
 
+#include <array>
 #include <gsl/gsl_util>
 
+#include <random>
 using Systems::CelestialRenderSystem;
 using namespace Components;
 
@@ -46,6 +52,25 @@ void CelestialRenderSystem::update(const float aAlpha)
             lerp.LastPosition = lerp.Position;
             lerp.Position = star.CalculatedPosition;
         }
+    });
+
+    std::random_device rDev;
+
+    r.view<StarField>().each([&rDev, &target](auto& field) {
+        if (GSL_UNLIKELY(field.CalculatedStars.empty()))
+        {
+            std::uniform_real_distribution<float> xDist(field.FieldSize.left, field.FieldSize.left + field.FieldSize.width);
+            std::uniform_real_distribution<float> yDist(field.FieldSize.top, field.FieldSize.top + field.FieldSize.height);
+            field.CalculatedStars.resize(field.Count);
+            for (int i = 0; i < field.Count; ++i)
+            {
+                auto& vert = field.CalculatedStars[i];
+                vert.position.x = xDist(rDev);
+                vert.position.y = yDist(rDev);
+            }
+        }
+
+        target.draw(field.CalculatedStars.data(), field.CalculatedStars.size(), sf::Points);
     });
 
     sf::Shader* atmosShader = m_atmosphereShader.get();
@@ -90,7 +115,6 @@ void CelestialRenderSystem::update(const float aAlpha)
         target.draw(circle);
     });
 
-    r.view<PlanetShape, Renderable>();
 }
 
 void CelestialRenderSystem::onInit()

@@ -4,6 +4,8 @@
 
 namespace Components
 {
+namespace Tags
+{
 
 struct InSystem
 {
@@ -11,4 +13,4 @@ struct InSystem
 };
 
 }
-
+}
