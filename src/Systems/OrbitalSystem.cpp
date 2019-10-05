@@ -1,11 +1,14 @@
 #include "OrbitalSystem.hpp"
 #include "../Util.hpp"
 
+#include "../Components/Tags/InSystem.hpp"
+#include "../Components/Tags/SystemCore.hpp"
 #include "../Components/GravityWell.hpp"
 #include "../Components/Physical.hpp"
 #include "../Components/CelestialBody.hpp"
 #include "../Components/SatteliteBody.hpp"
 
+#include "entt/entity/utility.hpp"
 
 #include <cmath>
 
@@ -45,6 +48,12 @@ void OrbitalSystem::update(const float aDt)
         sf::Vector2f direction(std::cos(sattelite.Angle), std::sin(sattelite.Angle));
         sattelite.CalculatedPosition = parentPosition + direction * sattelite.Distance;
     });
+
+    // Ensure far objects are detached from their system
+    systemExclusion();
+
+    // Ensure nearby objects are attached to the system
+    systemInclusion();
 
     // Ensure stellar modifications trickle down to sattelites
     orbitSetup();
@@ -86,4 +95,35 @@ void OrbitalSystem::orbitSetup(uint8_t aRounds)
             sattelite.CalculatedPosition = parentPosition + direction * sattelite.Distance;
         });
     }
+}
+
+void OrbitalSystem::systemExclusion()
+{
+    auto& r = getRegistry();
+
+    r.group<const Components::Tags::SystemCore, const Components::CelestialBody>().each([&r](auto systemEnt, const auto& core, const auto& body) {
+        r.group<const Components::Tags::InSystem, const Components::Physical>().each([systemEnt, &r, &body](auto ent, const auto& sys, const auto& physical) {
+            if (sys.System != systemEnt)
+                return;
+
+            auto distance = Util::GetLength(physical.Position - body.Position);
+
+            if (distance >= 10000)
+                r.remove<Components::Tags::InSystem>(ent);
+        });
+    });
+}
+
+void OrbitalSystem::systemInclusion()
+{
+    auto& r = getRegistry();
+
+    r.group<const Components::Tags::SystemCore, const Components::CelestialBody>().each([&r](auto systemEnt, const auto& core, const auto& body) {
+        r.group<const Components::Physical>(entt::exclude<Components::Tags::InSystem>).each([systemEnt, &r, &body](auto ent, const auto& physical) {
+            auto distance = Util::GetLength(physical.Position - body.Position);
+
+            if (distance < 10000)
+                r.assign<Components::Tags::InSystem>(ent, systemEnt);
+        });
+    });
 }
