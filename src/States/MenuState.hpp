@@ -3,6 +3,8 @@
 #include "../BaseState.hpp"
 #include "../EntityManager.hpp"
 
+#include "../Events/UIButtonClicked.hpp"
+
 namespace Components { struct UIButton; struct UIComponent; }
 
 namespace States
@@ -21,6 +23,7 @@ public:
     virtual void render(const float aAlpha) override;
 
 private:
+    void onButtonPress(const Events::UIButtonClicked& aEvent);
     std::tuple<entt::entity, Components::UIComponent&, Components::UIButton&> addButton(const std::string& aTitle);
 
     EntityManager m_backgroundManager,

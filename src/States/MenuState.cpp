@@ -1,4 +1,5 @@
 #include "MenuState.hpp"
+#include "../Application.hpp"
 
 #include "../Components/UIButton.hpp"
 #include "../Components/UIComponent.hpp"
@@ -11,6 +12,7 @@
 #include "../Systems/RenderSystem.hpp"
 #include "../Systems/UIRenderSystem.hpp"
 
+#include "GameState.hpp"
 using States::MenuState;
 
 MenuState::MenuState()
@@ -32,6 +34,9 @@ void MenuState::init()
 
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::RenderSystem>());
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::UIRenderSystem>());
+
+    auto& d = m_foregroundManager.getDispatcher();
+    d.sink<Events::UIButtonClicked>().connect<&MenuState::onButtonPress>(*this);
 
     auto& r = m_foregroundManager.getRegistry();
 
@@ -92,6 +97,14 @@ void MenuState::render(const float aAlpha)
 {
     m_backgroundManager.onRender(aAlpha);
     m_foregroundManager.onRender(aAlpha);
+}
+
+void MenuState::onButtonPress(const Events::UIButtonClicked& aEvent)
+{
+    if (aEvent.Button == "Quit")
+        getApplication().getRenderWindow().close();
+    else if (aEvent.Button == "Play")
+        getApplication().getStateManager().pushState(std::make_unique<States::GameState>(), StateManager::State_SwitchTo);
 }
 
 std::tuple<entt::entity, Components::UIComponent&, Components::UIButton&> MenuState::addButton(const std::string& aTitle)
