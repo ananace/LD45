@@ -16,7 +16,7 @@ public:
     enum
     {
         kFramesToCalc = 50,
-        kLongFrameTimeMS = 15,
+        kLongFrameTimeMS = 20,
         kLongUpdateTimeMS = 5
     };
 
