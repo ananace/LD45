@@ -8,8 +8,12 @@ namespace Components
 
 struct TradeJump
 {
-    sf::Vector2f TargetPosition;
+    sf::Vector2f StartPosition, EndPosition;
+    float Progress, Time;
+
     entt::entity TargetSystem;
+
+    TradeJump() : Progress{}, Time(5.f) { }
 };
 
 }

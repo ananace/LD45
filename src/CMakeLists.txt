@@ -27,13 +27,16 @@ set(LD45_HEADERS
     Components/Acceleration.hpp
     Components/Atmosphere.hpp
     Components/CelestialBody.hpp
+    Components/DelayedAction.hpp
     Components/Friction.hpp
     Components/GateShape.hpp
     Components/GravityWell.hpp
     Components/HoleShape.hpp
-    Components/Physical.hpp
     Components/PlanetShape.hpp
+    Components/PlayerInput.hpp
+    Components/Position.hpp
     Components/Renderables.hpp
+    Components/Rotation.hpp
     Components/SatteliteBody.hpp
     Components/StarShape.hpp
     Components/StationShape.hpp
@@ -41,12 +44,14 @@ set(LD45_HEADERS
     Components/UIButton.hpp
     Components/UIComponent.hpp
     Components/UIDialog.hpp
+    Components/Velocity.hpp
 
     States/GameState.hpp
     States/MenuState.hpp
 
     Systems/CelestialRenderSystem.hpp
     Systems/InputSystem.hpp
+    Systems/LogicSystem.hpp
     Systems/OrbitalSystem.hpp
     Systems/PhysicsSystem.hpp
     Systems/RenderSystem.hpp
@@ -67,6 +72,7 @@ set(LD45_SOURCES
 
     Systems/CelestialRenderSystem.cpp
     Systems/InputSystem.cpp
+    Systems/LogicSystem.cpp
     Systems/OrbitalSystem.cpp
     Systems/PhysicsSystem.cpp
     Systems/RenderSystem.cpp

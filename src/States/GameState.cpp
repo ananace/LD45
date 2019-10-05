@@ -6,6 +6,7 @@
 #include "../Components/Atmosphere.hpp"
 #include "../Components/CelestialBody.hpp"
 #include "../Components/Friction.hpp"
+#include "../Components/GateShape.hpp"
 #include "../Components/Position.hpp"
 #include "../Components/PlanetShape.hpp"
 #include "../Components/PlayerInput.hpp"
@@ -17,6 +18,7 @@
 
 #include "../Systems/CelestialRenderSystem.hpp"
 #include "../Systems/InputSystem.hpp"
+#include "../Systems/LogicSystem.hpp"
 #include "../Systems/OrbitalSystem.hpp"
 #include "../Systems/PhysicsSystem.hpp"
 #include "../Systems/RenderSystem.hpp"
@@ -43,6 +45,7 @@ void GameState::init()
     m_foregroundManager.init(&getApplication());
 
     m_universeManager.addSystem(std::make_unique<Systems::InputSystem>());
+    m_universeManager.addSystem(std::make_unique<Systems::LogicSystem>());
     m_universeManager.addSystem(std::make_unique<Systems::OrbitalSystem>());
     m_universeManager.addSystem(std::make_unique<Systems::PhysicsSystem>());
     m_universeManager.addRenderSystem(std::make_unique<Systems::CelestialRenderSystem>());
@@ -265,4 +268,20 @@ void GameState::createSystem()
     // auto uranus = r.create<Components::SatteliteBody, Components::PlanetShape>();
 
     // auto neptune = r.create<Components::SatteliteBody, Components::PlanetShape>();
+
+    auto gate1 = r.create<Components::SatteliteBody, Components::GateShape, Components::Renderable, Components::Position>();
+    {
+    auto& sattelite = std::get<1>(gate1);
+    auto& gate = std::get<2>(gate1);
+    auto& rend = std::get<3>(gate1);
+
+    sattelite.Orbiting = std::get<0>(sol);
+    sattelite.Distance = 1000.f;
+    sattelite.Speed = 0.0f;
+
+    sattelite.Angle = 1.5f;
+    gate.Angle = sattelite.Angle * (180 / 3.1415f);
+
+    rend.LastPosition = rend.Position = std::get<4>(gate1).Position;
+    }
 }

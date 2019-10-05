@@ -4,6 +4,7 @@
 
 #include "../Components/Atmosphere.hpp"
 #include "../Components/CelestialBody.hpp"
+#include "../Components/GateShape.hpp"
 #include "../Components/PlanetShape.hpp"
 #include "../Components/Renderables.hpp"
 #include "../Components/SatteliteBody.hpp"
@@ -13,6 +14,8 @@
 
 #include "gsl/gsl_assert"
 #include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Graphics/Color.hpp>
+#include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/Shader.hpp>
 #include <SFML/Graphics/Vertex.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
@@ -123,6 +126,25 @@ void CelestialRenderSystem::update(const float aAlpha)
         target.draw(circle);
     });
 
+    sf::ConvexShape gateShape(5);
+    gateShape.setPoint(0, { 10, 0 });
+    gateShape.setPoint(1, { -10, 10 });
+    gateShape.setPoint(2, { -3, 3.f });
+    gateShape.setPoint(3, { -3, -3.f });
+    gateShape.setPoint(4, { -10, -10 });
+
+    gateShape.setFillColor(sf::Color::Transparent);
+    gateShape.setOutlineColor(sf::Color(64, 196, 64));
+    gateShape.setOutlineThickness(2.f);
+
+    r.group<const GateShape>(entt::get<Renderable>).each([&target, &gateShape, aAlpha](auto& gate, auto& lerp){
+        lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
+
+        gateShape.setPosition(lerp.CurrentPosition);
+        gateShape.setRotation(gate.Angle);
+
+        target.draw(gateShape);
+    });
 }
 
 void CelestialRenderSystem::onInit()
