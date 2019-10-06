@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd "@CMAKE_INSTALL_PREFIX@/share/AnanaceLD45"
+exec ./LD45 $@

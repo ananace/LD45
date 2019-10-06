@@ -123,5 +123,5 @@ target_include_directories(LD45
 install(
     TARGETS
     LD45
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION share/AnanaceLD45
 )

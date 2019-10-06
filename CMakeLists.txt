@@ -30,6 +30,13 @@ add_subdirectory(src)
 
 if (UNIX)
     configure_file(dist/com.ldjam.ananace.LD45.desktop.in dist/com.ldjam.ananace.LD45.desktop)
+    configure_file(dist/LD45.sh.in dist/LD45)
+
+    install(
+        PROGRAMS
+        ${CMAKE_CURRENT_BINARY_DIR}/dist/LD45
+        DESTINATION bin
+    )
     install(
         FILES
         ${CMAKE_CURRENT_BINARY_DIR}/dist/com.ldjam.ananace.LD45.desktop

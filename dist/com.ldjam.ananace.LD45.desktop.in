@@ -2,6 +2,6 @@
 Type=Application
 Name=Untitled Space Exploration Game (LD45)
 Icon=com.ldjam.ananace.LD45
-Exec=bash -c 'cd "@CMAKE_INSTALL_PREFIX@/share/AnanaceLD45" && LD45'
+Exec=LD45
 Path=@CMAKE_INSTALL_PREFIX@/share/AnanaceLD45
 Categories=Game;
