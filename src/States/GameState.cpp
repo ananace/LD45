@@ -58,6 +58,24 @@ void GameState::init()
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::UIRenderSystem>());
 
     createSystem();
+    for (int i = 0; i < 8; ++i)
+    {
+        const float total = (Math::PI*2) / 8;
+        float dir = total * i;
+        createSystem(sf::Vector2f(std::cos(dir), std::sin(dir)) * 50000.f);
+    }
+    for (int i = 0; i < 16; ++i)
+    {
+        const float total = (Math::PI*2) / 16;
+        float dir = total * i;
+        createSystem(sf::Vector2f(std::cos(dir), std::sin(dir)) * 100000.f);
+    }
+    for (int i = 0; i < 32; ++i)
+    {
+        const float total = (Math::PI*2) / 32;
+        float dir = total * i;
+        createSystem(sf::Vector2f(std::cos(dir), std::sin(dir)) * 150000.f);
+    }
 
     auto& r = m_universeManager.getRegistry();
 
@@ -305,7 +323,10 @@ void GameState::createSystem(const sf::Vector2f aCenter)
 
     printf("Final system size %f\n", currentDistance);
 
+    currentDistance = std::max(currentDistance, 5000.f);
+
     auto& starfield = r.assign<Components::StarField>(systemCenter);
+    starfield.Count = 2048;
     starfield.FieldSize.left = aCenter.x - currentDistance * 2.5f;
     starfield.FieldSize.top = aCenter.y - currentDistance * 2.5f;
     starfield.FieldSize.width = currentDistance * 5.f;
