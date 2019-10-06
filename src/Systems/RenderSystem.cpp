@@ -33,21 +33,17 @@ void RenderSystem::update(const float aAlpha)
     auto& app = getApplication();
     auto& target = app.getRenderWindow();
 
-    r.group<const DrawableRenderable>(entt::get<const Renderable, const VisibleVelocity>).each([&target](auto& drawable, auto& renderable, auto& velocity) {
-        sf::RenderStates states;
-        states.transform
-            .translate(renderable.CurrentPosition)
-            .rotate(renderable.CurrentAngle * Math::RAD2DEG)
-            .scale(1.f + velocity.Velocity / 2.f, 1.f - velocity.Velocity / 10.f);
-
-        target.draw(*drawable.Drawable, states);
-    });
-
-    r.group<const DrawableRenderable>(entt::get<const Renderable>, entt::exclude<VisibleVelocity>).each([&target](auto& drawable, auto& renderable) {
+    r.group<const DrawableRenderable>(entt::get<const Renderable>).each([&r, &target](auto ent, auto& drawable, auto& renderable) {
         sf::RenderStates states;
         states.transform
             .translate(renderable.CurrentPosition)
             .rotate(renderable.CurrentAngle * Math::RAD2DEG);
+
+        if (r.has<VisibleVelocity>(ent))
+        {
+            auto& velocity = r.get<VisibleVelocity>(ent);
+            states.transform.scale(1.f + velocity.Velocity / 2.f, 1.f - velocity.Velocity / 10.f);
+        }
 
         target.draw(*drawable.Drawable, states);
     });
