@@ -27,3 +27,26 @@ endforeach ()
 
 add_subdirectory(extern)
 add_subdirectory(src)
+
+if (UNIX)
+    configure_file(dist/com.ldjam.ananace.LD45.desktop.in dist/com.ldjam.ananace.LD45.desktop)
+    install(
+        FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/dist/com.ldjam.ananace.LD45.desktop
+        DESTINATION share/applications
+    )
+
+    install(
+        FILES
+        data/Atmosphere.frag
+        data/Corona.frag
+        data/Orbit.frag
+        DESTINATION share/AnanaceLD45/data
+    )
+
+    install(
+        FILES
+        dist/com.ldjam.ananace.LD45.png
+        DESTINATION share/icons/hicolor/512x512/apps
+    )
+endif()

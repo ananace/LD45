@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Untitled Space Exploration Game (LD45)
+Icon=com.ldjam.ananace.LD45
+Exec=LD45
+Path=@CMAKE_INSTALL_PREFIX@/share/AnanaceLD45
+Categories=Game;

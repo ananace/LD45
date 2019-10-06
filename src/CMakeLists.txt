@@ -119,3 +119,9 @@ target_link_libraries(LD45
 target_include_directories(LD45
     PRIVATE
 )
+
+install(
+    TARGETS
+    LD45
+    RUNTIME DESTINATION bin
+)
