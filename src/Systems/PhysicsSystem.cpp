@@ -36,7 +36,7 @@ void onTradeJumpCreate(entt::entity aShip, entt::registry& aReg, Components::Tra
 
     auto direction = Util::GetNormalized(tradeJump.EndPosition - tradeJump.StartPosition);
 
-    aReg.assign_or_replace<VisibleVelocity>(aShip, 5.f);
+    aReg.assign_or_replace<VisibleVelocity>(aShip, 2.5f);
     aReg.assign_or_replace<Rotation>(aShip, Util::GetAngle(direction));
 
     aReg.assign<DelayedAction>(aShip, tradeJump.Time + 1.f, [hadFriction, oldFriction](entt::entity aShip, entt::registry& aReg) {

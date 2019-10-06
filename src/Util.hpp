@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Spinor.hpp"
+
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Graphics/Font.hpp>
 
@@ -59,6 +61,13 @@ namespace Util
     inline float GetLerped(float aAlpha, const float aFrom, const float aTo)
     {
         return (1.f - aAlpha) * aFrom + aAlpha * aTo;
+    }
+
+    inline float GetSlerpedAngle(float aAlpha, const float aFrom, const float aTo)
+    {
+        return Spinor(std::cos(aFrom / 2.f), std::sin(aFrom / 2.f))
+            .getSlerp(aAlpha, Spinor(std::cos(aTo / 2.f), std::sin(aTo / 2.f)))
+            .getAngle();
     }
 
     inline sf::Font GetDefaultFont(Font type = Font_Default)

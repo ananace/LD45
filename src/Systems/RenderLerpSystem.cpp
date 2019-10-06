@@ -66,7 +66,8 @@ void RenderLerpSystem::update(const float aAlpha)
             renderable.Angle = angle.Angle;
         }
 
-        renderable.CurrentAngle = Util::GetLerped(aAlpha, renderable.LastAngle, renderable.Angle);
+        // Use a spinor and spherical lerp to avoid issues when interpolating angles over the horizon
+        renderable.CurrentAngle = Util::GetSlerpedAngle(aAlpha, renderable.LastAngle, renderable.Angle);
     });
 }
 

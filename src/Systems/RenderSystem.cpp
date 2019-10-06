@@ -38,7 +38,13 @@ void RenderSystem::update(const float aAlpha)
         states.transform
             .translate(renderable.CurrentPosition)
             .rotate(renderable.CurrentAngle * Math::RAD2DEG)
-            .scale(velocity.Velocity, 1.f);
+            .scale(1.f + velocity.Velocity / 2.f, 1.f);
+
+        target.draw(*drawable.Drawable, states);
+
+        states.transform
+            .translate(-velocity.Velocity * 2.f, 0.f);
+        states.blendMode = sf::BlendAdd;
 
         target.draw(*drawable.Drawable, states);
     });

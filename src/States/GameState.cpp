@@ -25,6 +25,8 @@
 #include "../Components/Velocity.hpp"
 #include "../Components/VisibleVelocity.hpp"
 
+#include "../Ships/BasicShip.hpp"
+
 #include "../Systems/CelestialRenderSystem.hpp"
 #include "../Systems/InputSystem.hpp"
 #include "../Systems/LogicSystem.hpp"
@@ -433,22 +435,18 @@ void GameState::createColonies()
     }
 }
 
-sf::CircleShape playerCircle;
+Ships::BasicShip playerShip;
 void GameState::createPlayer()
 {
     auto& r = m_universeManager.getRegistry();
 
     auto player = std::get<0>(r.create<Components::Renderable, Components::PlayerInput, Components::Tags::CameraTag, Components::Tags::JumpCapable, Components::Velocity, Components::Rotation>());
 
-    r.assign<Components::DrawableRenderable>(player, &playerCircle);
+    r.assign<Components::DrawableRenderable>(player, &playerShip);
 
     // auto& pl = r.assign<Components::PlanetShape>(player);
     auto& phy = r.assign<Components::Position>(player);
     auto& fric = r.assign<Components::Friction>(player);
-
-    playerCircle.setRadius(5.f);
-    playerCircle.setOrigin(5.f, 5.f);
-    playerCircle.setFillColor(sf::Color::White);
 
     // pl.Color = sf::Color::White;
     // pl.Size = 5.f;

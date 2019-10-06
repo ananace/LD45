@@ -18,6 +18,7 @@ set(LD45_HEADERS
     EntityManager.hpp
     Math.hpp
     ResourceManager.hpp
+    Spinor.hpp
     StateManager.hpp
     Util.hpp
 
@@ -54,6 +55,8 @@ set(LD45_HEADERS
     Components/Velocity.hpp
     Components/VisibleVelocity.hpp
 
+    Ships/BasicShip.hpp
+
     States/GameState.hpp
     States/MenuState.hpp
 
@@ -75,6 +78,8 @@ set(LD45_SOURCES
     EntityManager.cpp
     ResourceManager.cpp
     StateManager.cpp
+
+    Ships/BasicShip.cpp
 
     States/GameState.cpp
     States/MenuState.cpp
