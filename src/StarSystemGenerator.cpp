@@ -30,6 +30,7 @@ void StarSystemGenerator::createSystem(entt::registry& aReg, const sf::Vector2f&
     std::uniform_real_distribution<float> stellarSpaceDist(1.75f, 8.f);
     std::uniform_real_distribution<float> atmosphereThicknessDist(1.0f, 2.5f);
     std::uniform_int_distribution<uint8_t> starTypeDist(Components::StarShape::O, Components::StarShape::M);
+    std::uniform_int_distribution<int> reverseOrbitChanceDist(0, 14);
     std::uniform_int_distribution<int> binarySystemChanceDist(0, 9);
     std::uniform_int_distribution<int> moonChanceDist(0, 3);
     std::uniform_int_distribution<int> atmosphereChanceDist(0, 4);
@@ -37,8 +38,8 @@ void StarSystemGenerator::createSystem(entt::registry& aReg, const sf::Vector2f&
     std::uniform_int_distribution<uint8_t> moonCountDist(1, 6);
     std::uniform_int_distribution<uint8_t> colorDist(0, 255);
 
-    // 2.5m - 15m for a full orbit
-    std::uniform_real_distribution<float> orbitPeriodDist(2.5f * 60.f, 15.f * 60.f);
+    // 2.5m - 30m for a full orbit
+    std::uniform_real_distribution<float> orbitPeriodDist(2.5f * 60.f, 30.f * 60.f);
 
     std::random_device rDev;
 
@@ -158,19 +159,22 @@ void StarSystemGenerator::createSystem(entt::registry& aReg, const sf::Vector2f&
                         additionalRad += atmos.OuterSize * 0.75f;
                     }
 
-                    const auto& body = aReg.assign<Components::SatteliteBody>(moonMoon, moon, moonSize + moonMoonSize * stellarSpaceDist(rDev), ((Math::PI * 2.f) / orbitPeriodDist(rDev)), randRadDist(rDev));
+                    float orbitDir = (reverseOrbitChanceDist(rDev) == 0 ? -1 : 1);
+                    const auto& body = aReg.assign<Components::SatteliteBody>(moonMoon, moon, moonSize + moonMoonSize * stellarSpaceDist(rDev), ((Math::PI * 2.f) / orbitPeriodDist(rDev)) * orbitDir, randRadDist(rDev));
                     printf("[SSG|D]       at an orbit of %.2f\n", body.Distance);
                     additionalRad += body.Distance;
                 }
 
                 totalMoonRadius += additionalRad + moonSize * stellarSpaceDist(rDev);
 
-                auto& body = aReg.assign<Components::SatteliteBody>(moon, planet, totalMoonRadius, ((Math::PI * 2.f) / orbitPeriodDist(rDev)), randRadDist(rDev));
+                float orbitDir = (reverseOrbitChanceDist(rDev) == 0 ? -1 : 1);
+                auto& body = aReg.assign<Components::SatteliteBody>(moon, planet, totalMoonRadius, ((Math::PI * 2.f) / orbitPeriodDist(rDev)) * orbitDir, randRadDist(rDev));
                 printf("[SSG|D]     with an orbital distance of %.2f:\n", body.Distance);
             }
         }
 
-        auto& body = aReg.assign<Components::SatteliteBody>(planet, systemCenter, currentDistance + totalMoonRadius * 1.75f, ((Math::PI * 2.f) / orbitPeriodDist(rDev)), randRadDist(rDev));
+        float orbitDir = (reverseOrbitChanceDist(rDev) == 0 ? -1 : 1);
+        auto& body = aReg.assign<Components::SatteliteBody>(planet, systemCenter, currentDistance + totalMoonRadius * 1.75f, ((Math::PI * 2.f) / orbitPeriodDist(rDev)) * orbitDir, randRadDist(rDev));
         printf("[SSG|D]   with orbit distance of %.2f\n", body.Distance);
         printf("[SSG|D]   and orbit period of %.2fs\n\n", (Math::PI * 2.f) / body.Speed);
 

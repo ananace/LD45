@@ -81,6 +81,10 @@ void GameState::init()
     ssg.createJumpHoles(m_universeManager.getRegistry());
     ssg.createColonies(m_universeManager.getRegistry());
     createPlayer();
+
+    // Let the orbits settle after generation
+    for (int i = 0; i < 5; ++i)
+        m_universeManager.onUpdate(0.f);
 }
 
 void GameState::handleEvent(const sf::Event& aEvent)

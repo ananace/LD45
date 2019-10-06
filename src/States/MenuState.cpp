@@ -50,6 +50,10 @@ void MenuState::init()
     ssg.createSystem(m_backgroundManager.getRegistry());
     ssg.createColonies(m_backgroundManager.getRegistry());
 
+    // Let the orbits settle after generation
+    for (int i = 0; i < 3; ++i)
+        m_backgroundManager.onUpdate(0.f);
+
     createCameraTags();
 
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::UIRenderSystem>());
