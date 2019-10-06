@@ -120,6 +120,7 @@ void GameState::handleEvent(const sf::Event& aEvent)
             zoom *= 1.15f;
         else
             zoom *= 0.95f;
+        zoom = std::clamp(zoom, 0.25f, 2.5f);
 
         m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseWheelScrolled>>({ aEvent });
         m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseWheelScrolled>>({ aEvent });
@@ -191,9 +192,9 @@ void GameState::createSystem(const sf::Vector2f aCenter)
     std::uniform_real_distribution<float> stellarSpaceDist(1.75f, 8.f);
     std::uniform_real_distribution<float> atmosphereThicknessDist(1.0f, 2.5f);
     std::uniform_int_distribution<uint8_t> starTypeDist(Components::StarShape::O, Components::StarShape::M);
-    std::uniform_int_distribution<int> binarySystemChanceDist(0, 2);
+    std::uniform_int_distribution<int> binarySystemChanceDist(0, 9);
     std::uniform_int_distribution<int> moonChanceDist(0, 3);
-    std::uniform_int_distribution<int> atmosphereChanceDist(0, 5);
+    std::uniform_int_distribution<int> atmosphereChanceDist(0, 4);
     std::uniform_int_distribution<uint8_t> planetCountDist(0, 10);
     std::uniform_int_distribution<uint8_t> moonCountDist(1, 6);
     std::uniform_int_distribution<uint8_t> colorDist(0, 255);
@@ -285,22 +286,41 @@ void GameState::createSystem(const sf::Vector2f aCenter)
             printf("[GameState|D]   with %d moons:\n", moons);
             for (uint8_t i = 0; i < moons; ++i)
             {
-                auto moon = std::get<0>(r.create<Components::Position, Components::Renderable, Components::Tags::TracedOrbit>());
                 float moonSize = moonSizeDist(rDev);
+                auto moon = std::get<0>(r.create<Components::Position, Components::Renderable, Components::Tags::TracedOrbit>());
+                auto& shape = r.assign<Components::PlanetShape>(moon, moonSize, sf::Color(colorDist(rDev), colorDist(rDev), colorDist(rDev)));
                 printf("[GameState|D]   - Generating moon of size %.1f\n", moonSize);
 
-                const bool moonHasMoon = moonChanceDist(rDev) == 0 && moonChanceDist(rDev) == 0;
                 float additionalRad = 0.f;
+                const bool hasAtmosphere = atmosphereChanceDist(rDev) == 0;
+                if (hasAtmosphere)
+                {
+                    printf("[GameState|D]     with atmosphere\n");
+                    const auto& atmos = r.assign<Components::Atmosphere>(moon, moonSize, moonSize * atmosphereThicknessDist(rDev), shape.Color);
+
+                    additionalRad += atmos.OuterSize * 0.75f;
+                }
+
+                const bool moonHasMoon = moonChanceDist(rDev) == 0 && moonChanceDist(rDev) == 0;
                 if (moonHasMoon)
                 {
                     printf("[GameState|D]     with a moon of its own:\n");
-                    auto moonMoon = std::get<0>(r.create<Components::Position, Components::Renderable, Components::Tags::TracedOrbit>());
                     float moonMoonSize = moonSizeDist(rDev);
+                    auto moonMoon = std::get<0>(r.create<Components::Position, Components::Renderable, Components::Tags::TracedOrbit>());
+                    auto& shape = r.assign<Components::PlanetShape>(moonMoon, moonMoonSize, sf::Color(colorDist(rDev), colorDist(rDev), colorDist(rDev)));
 
                     printf("[GameState|D]     - Generating moon of size %.1f\n", moonMoonSize);
 
+                    const bool hasAtmosphere = atmosphereChanceDist(rDev) == 0;
+                    if (hasAtmosphere)
+                    {
+                        printf("[GameState|D]       with atmosphere\n");
+                        const auto& atmos = r.assign<Components::Atmosphere>(moonMoon, moonMoonSize, moonMoonSize * atmosphereThicknessDist(rDev), shape.Color);
+
+                        additionalRad += atmos.OuterSize * 0.75f;
+                    }
+
                     const auto& body = r.assign<Components::SatteliteBody>(moonMoon, moon, moonSize + moonMoonSize * stellarSpaceDist(rDev), ((Math::PI * 2.f) / orbitPeriodDist(rDev)), randRadDist(rDev));
-                    r.assign<Components::PlanetShape>(moonMoon, moonMoonSize, sf::Color(colorDist(rDev), colorDist(rDev), colorDist(rDev)));
                     printf("[GameState|D]       at an orbit of %.2f\n", body.Distance);
                     additionalRad += body.Distance;
                 }
@@ -308,7 +328,6 @@ void GameState::createSystem(const sf::Vector2f aCenter)
                 totalMoonRadius += additionalRad + moonSize * stellarSpaceDist(rDev);
 
                 auto& body = r.assign<Components::SatteliteBody>(moon, planet, totalMoonRadius, ((Math::PI * 2.f) / orbitPeriodDist(rDev)), randRadDist(rDev));
-                r.assign<Components::PlanetShape>(moon, moonSize, sf::Color(colorDist(rDev), colorDist(rDev), colorDist(rDev)));
                 printf("[GameState|D]     with an orbital distance of %.2f:\n", body.Distance);
             }
         }
