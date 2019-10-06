@@ -48,7 +48,7 @@ void RenderLerpSystem::update(const float aAlpha)
 
     auto now = std::chrono::high_resolution_clock::now();
 
-    r.group<Renderable>(entt::get<const Position>).each([aAlpha, now, &r](auto& renderable, auto& position) {
+    r.view<Renderable, const Position>().each([aAlpha, now, &r](auto& renderable, auto& position) {
         if (position.Position != renderable.Position || now - renderable.LastPositionUpdate > std::chrono::milliseconds(25))
         {
             renderable.LastPositionUpdate = now;
@@ -58,7 +58,7 @@ void RenderLerpSystem::update(const float aAlpha)
 
         renderable.CurrentPosition = Util::GetLerped(aAlpha, renderable.LastPosition, renderable.Position);
     });
-    r.group<Renderable>(entt::get<const Rotation>).each([aAlpha, now, &r](auto& renderable, auto& angle) {
+    r.view<Renderable, const Rotation>().each([aAlpha, now, &r](auto& renderable, auto& angle) {
         if (angle.Angle != renderable.Angle || now - renderable.LastRotationUpdate > std::chrono::milliseconds(25))
         {
             renderable.LastRotationUpdate = now;
