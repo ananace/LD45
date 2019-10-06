@@ -7,6 +7,7 @@
 #include <SFML/Audio/Music.hpp>
 #include <SFML/Audio/SoundBuffer.hpp>
 
+#include <stdexcept>
 ResourceManager::ResourceManager()
 {
 }
@@ -24,7 +25,7 @@ void ResourceManager::addResource(ResourceDefinition&& aResource)
 
 #define DEFAULT_LOAD(T) \
 template<> \
-std::shared_ptr<T> ResourceManager::loadDefinition<T>(const ResourceDefinition& aDef) \
+std::shared_ptr<T> ResourceManager::loadDefinition<T>(const ResourceDefinition& aDef, bool aFatal) \
 { \
     const std::string& aFile = aDef.Path; \
     RES_DEBUG << "Loading " << aDef.Name << " (" #T ") from " << aFile << "..." << std::endl; \
@@ -34,13 +35,15 @@ std::shared_ptr<T> ResourceManager::loadDefinition<T>(const ResourceDefinition& 
     }); \
     if (ptr->loadFromFile(aFile)) \
         return ptr; \
+    if (aFatal)\
+        throw std::runtime_error("Failed to load " + aDef.Name + " (" #T ") from " + aFile); \
     RES_ERROR << "Failed to load " << aDef.Name << " (" #T ") from " << aFile << "..." << std::endl; \
     return std::shared_ptr<T>(); \
 } \
 
 #define MODIFIED_LOAD(T, LOAD) \
 template<> \
-std::shared_ptr<T> ResourceManager::loadDefinition<T>(const ResourceDefinition& aDef) \
+std::shared_ptr<T> ResourceManager::loadDefinition<T>(const ResourceDefinition& aDef, bool aFatal) \
 { \
     const std::string& aFile = aDef.Path; \
     RES_DEBUG << "Loading " << aDef.Name << " (" #T ") from " << aFile << "..." << std::endl; \
@@ -50,6 +53,8 @@ std::shared_ptr<T> ResourceManager::loadDefinition<T>(const ResourceDefinition& 
     }); \
     if (ptr-> LOAD) \
         return ptr; \
+    if (aFatal) \
+        throw std::runtime_error("Failed to load " + aDef.Name + " (" #T ") from " + aFile); \
     RES_ERROR << "Failed to load " << aDef.Name << " (" #T ") from " << aFile << "..." << std::endl; \
     return std::shared_ptr<T>(); \
 } \

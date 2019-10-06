@@ -30,10 +30,12 @@ public:
     ~ResourceManager();
 
     template<typename T>
-    std::shared_ptr<T> load(entt::hashed_string aName) {
+    std::shared_ptr<T> load(entt::hashed_string aName, bool aFatal = false) {
         if (m_registeredResources.count(aName) == 0)
         {
             RES_ERROR << "Tried to load unregistered resource " << std::string(aName.data()) << std::endl;
+            if (aFatal)
+                throw std::runtime_error("Tried to load unregistered resource " + std::string(aName.data()));
             return std::shared_ptr<T>();
         }
 
@@ -41,6 +43,8 @@ public:
         if (def.Type != typeid(T))
         {
             RES_ERROR << "Resource " << def.Name << " is not of type " << def.Type.name() << std::endl;
+            if (aFatal)
+                throw std::runtime_error("Resource " + def.Name + " is not of type " + def.Type.name());
             return std::shared_ptr<T>();
         }
 
@@ -58,7 +62,7 @@ public:
             }
         }
 
-        auto loaded(loadDefinition<T>(def));
+        auto loaded(loadDefinition<T>(def, aFatal));
 
         auto voidp = std::reinterpret_pointer_cast<void>(loaded);
         m_loadedResources[aName] = voidp;
@@ -75,7 +79,7 @@ private:
     void addResource(ResourceDefinition&& aResource);
 
     template<typename T>
-    std::shared_ptr<T> loadDefinition(const ResourceDefinition& aFile);
+    std::shared_ptr<T> loadDefinition(const ResourceDefinition& aFile, bool aFatal);
 
     std::unordered_map<entt::hashed_string::hash_type, ResourceDefinition> m_registeredResources;
     std::unordered_map<entt::hashed_string::hash_type, std::weak_ptr<void>> m_loadedResources;

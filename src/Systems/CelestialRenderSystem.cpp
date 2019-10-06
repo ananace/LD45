@@ -68,25 +68,29 @@ void CelestialRenderSystem::update(const float aAlpha)
     float totalAlpha = std::chrono::duration<float>(app.getTotalTime()).count();
 
     sf::Shader* atmosShader = m_atmosphereShader.get();
-    atmosShader->setUniform("alpha", totalAlpha);
     sf::Shader* coronaShader = m_coronaShader.get();
-    coronaShader->setUniform("alpha", totalAlpha);
     sf::Shader* orbitShader = m_orbitShader.get();
+
+    atmosShader->setUniform("alpha", totalAlpha);
+    coronaShader->setUniform("alpha", totalAlpha);
     orbitShader->setUniform("alpha", totalAlpha);
+
+    const auto& size1 = target.getView().getSize();
+    const auto& size2 = target.getSize();
+    const float scale = Util::GetLength({ size1.x / size2.x, size1.y / size2.y }) * 1.415f;
+
+    atmosShader->setUniform("scale", scale);
+    coronaShader->setUniform("scale", scale);
+    orbitShader->setUniform("scale", scale);
 
     {
     sf::CircleShape orbitCircle(16u);
     orbitCircle.setFillColor(sf::Color::Transparent);
-    r.group<const Tags::TracedOrbit>(entt::get<const SatteliteBody, const Position>).each([orbitShader, &r, &target, &orbitCircle](const auto& _orb, auto& body, auto& position){
+    r.group<const Tags::TracedOrbit>(entt::get<const SatteliteBody, const Position>).each([orbitShader, &size2, &r, &target, &orbitCircle](const auto& _orb, auto& body, auto& position){
         auto& orbitPos = r.get<const Position>(body.Orbiting).Position;
 
-        const auto& size1 = target.getView().getSize();
-        const auto& size2 = target.getSize();
-
-        float scale = Util::GetLength({ size1.x / size2.x, size1.y / size2.y });
-
         auto coords = target.mapCoordsToPixel(orbitPos);
-        orbitShader->setUniform("center", sf::Glsl::Vec4{ float(coords.x), size2.y - float(coords.y), body.Distance / scale * 1.415f, 0.5f });
+        orbitShader->setUniform("center", sf::Glsl::Vec4{ float(coords.x), size2.y - float(coords.y), body.Distance, 0.5f });
 
         orbitCircle.setPosition(orbitPos);
         orbitCircle.setRadius(body.Distance * 2.f);
@@ -97,35 +101,21 @@ void CelestialRenderSystem::update(const float aAlpha)
     }
 
     sf::CircleShape circle(64u);
-    r.group<const Atmosphere>(entt::get<Renderable>).each([atmosShader, &target, &circle, aAlpha](auto& atmos, auto& lerp){
-        // lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
-
+    r.group<const Atmosphere>(entt::get<Renderable>).each([atmosShader, &size2, &target, &circle, aAlpha](auto& atmos, auto& lerp){
         circle.setFillColor(sf::Color::Transparent);
         circle.setRadius(atmos.OuterSize * 2.f);
         circle.setOrigin(atmos.OuterSize * 2.f, atmos.OuterSize * 2.f);
         circle.setPosition(lerp.CurrentPosition);
 
-        const auto& size1 = target.getView().getSize();
-        const auto& size2 = target.getSize();
-
-        float scale = Util::GetLength({ size1.x / size2.x, size1.y / size2.y });
-
         auto coords = target.mapCoordsToPixel(lerp.CurrentPosition);
-        atmosShader->setUniform("center", sf::Glsl::Vec4{ float(coords.x), size2.y - float(coords.y), atmos.InnerSize / scale, atmos.OuterSize / scale });
+        atmosShader->setUniform("center", sf::Glsl::Vec4{ float(coords.x), size2.y - float(coords.y), atmos.InnerSize, atmos.OuterSize });
         atmosShader->setUniform("color", sf::Glsl::Vec4(atmos.Color));
 
         target.draw(circle, atmosShader);
     });
-    r.group<const StarShape>(entt::get<Renderable>).each([coronaShader, &target, &circle, aAlpha](auto& star, auto& lerp){
-        // lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
-
-        const auto& size1 = target.getView().getSize();
-        const auto& size2 = target.getSize();
-
-        float scale = Util::GetLength({ size1.x / size2.x, size1.y / size2.y });
-
+    r.group<const StarShape>(entt::get<Renderable>).each([coronaShader, &size2, &target, &circle, aAlpha](auto& star, auto& lerp){
         auto coords = target.mapCoordsToPixel(lerp.CurrentPosition);
-        coronaShader->setUniform("center", sf::Glsl::Vec4{ float(coords.x), size2.y - float(coords.y), star.Size / scale, (star.Size * 1.25f) / scale });
+        coronaShader->setUniform("center", sf::Glsl::Vec4{ float(coords.x), size2.y - float(coords.y), star.Size, (star.Size * 1.25f) });
         coronaShader->setUniform("color", sf::Glsl::Vec4(star.CalculatedColor));
 
         circle.setFillColor(sf::Color::Transparent);
@@ -134,17 +124,8 @@ void CelestialRenderSystem::update(const float aAlpha)
         circle.setPosition(lerp.CurrentPosition);
 
         target.draw(circle, coronaShader);
-
-        // circle.setFillColor(star.CalculatedColor);
-        // circle.setRadius(star.Size);
-        // circle.setOrigin(star.Size, star.Size);
-        // circle.setPosition(lerp.CurrentPosition);
-
-        // target.draw(circle);
     });
     r.group<const PlanetShape>(entt::get<Renderable>).each([&target, &circle, aAlpha](auto& planet, auto& lerp){
-        // lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
-
         circle.setFillColor(planet.Color);
         circle.setRadius(planet.Size);
         circle.setOrigin(planet.Size, planet.Size);
@@ -165,8 +146,6 @@ void CelestialRenderSystem::update(const float aAlpha)
     gateShape.setOutlineThickness(2.f);
 
     r.group<const GateShape>(entt::get<Renderable>).each([&target, &gateShape, aAlpha](auto& gate, auto& lerp){
-        // lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
-
         gateShape.setPosition(lerp.CurrentPosition);
         gateShape.setRotation(gate.Angle * Math::RAD2DEG);
 
@@ -178,7 +157,7 @@ void CelestialRenderSystem::onInit()
 {
     auto& app = getApplication();
 
-    m_atmosphereShader = app.getResourceManager().load<sf::Shader>("Atmosphere");
-    m_coronaShader = app.getResourceManager().load<sf::Shader>("Corona");
-    m_orbitShader = app.getResourceManager().load<sf::Shader>("Orbit");
+    m_atmosphereShader = app.getResourceManager().load<sf::Shader>("Atmosphere", true);
+    m_coronaShader = app.getResourceManager().load<sf::Shader>("Corona", true);
+    m_orbitShader = app.getResourceManager().load<sf::Shader>("Orbit", true);
 }

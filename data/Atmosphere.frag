@@ -76,6 +76,7 @@ float snoise(vec3 v){
 uniform vec4 center;
 uniform vec4 color;
 uniform float alpha;
+uniform float scale;
 
 void main() {
     vec2 directionVec = gl_FragCoord.xy - center.xy;
@@ -84,7 +85,7 @@ void main() {
     float noise = (1.0 + snoise(vec3(normalize(directionVec), alpha / 15.0))) * 0.5;
     distance += noise * 2.0;
 
-    float mixValue = 1.0 - exp(-(distance - center.z) / center.w);
+    float mixValue = 1.0 - exp(-(distance - (center.z / scale)) / (center.w / scale));
 
     gl_FragColor = mix(color, gl_Color, mixValue);
 }
