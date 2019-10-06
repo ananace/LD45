@@ -91,9 +91,8 @@ void main() {
         vec4 noisedColor = mix(color, vec4(0.0, 0.0, 0.0, 1.0), mixValue);
 
         mixValue = 1.0 - ((distance - center.z) / center.w);
-        vec4 coreColor = mix(noisedColor, color, mixValue);
 
-        gl_FragColor = mix(gl_Color, coreColor, 1.0);
+        gl_FragColor = mix(noisedColor, color, mixValue);
         return;
     }
 
@@ -102,5 +101,7 @@ void main() {
 
     float mixValue = min(1.0, 1.2 - exp(-(distance - center.z) / (center.w * 0.95)));
 
-    gl_FragColor = mix(color, gl_Color, mixValue);
+    vec4 coronaColor = mix(color, vec4(1.0, 1.0, 1.0, 1.0), 0.7);
+
+    gl_FragColor = mix(coronaColor, gl_Color, mixValue);
 }

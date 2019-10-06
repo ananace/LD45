@@ -11,7 +11,7 @@ class GameState : public BaseState
 {
 public:
     enum {
-        kSystemRings = 4,
+        kSystemRings = 3,
     };
 
     GameState();

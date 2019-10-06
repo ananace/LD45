@@ -5,13 +5,16 @@
 namespace Systems
 {
 
-class RenderSystem : public BaseSystem
+class RenderLerpSystem : public BaseSystem
 {
 public:
-    RenderSystem();
-    ~RenderSystem();
+    RenderLerpSystem();
+    ~RenderLerpSystem();
 
     virtual void update(const float aAlpha) override;
+
+private:
+    void onInit() override;
 };
 
 }

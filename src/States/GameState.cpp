@@ -17,19 +17,23 @@
 #include "../Components/PlanetShape.hpp"
 #include "../Components/PlayerInput.hpp"
 #include "../Components/Renderables.hpp"
+#include "../Components/Rotation.hpp"
 #include "../Components/SatteliteBody.hpp"
 #include "../Components/StarField.hpp"
 #include "../Components/StarShape.hpp"
 #include "../Components/Velocity.hpp"
+#include "../Components/VisibleVelocity.hpp"
 
 #include "../Systems/CelestialRenderSystem.hpp"
 #include "../Systems/InputSystem.hpp"
 #include "../Systems/LogicSystem.hpp"
 #include "../Systems/OrbitalSystem.hpp"
 #include "../Systems/PhysicsSystem.hpp"
+#include "../Systems/RenderLerpSystem.hpp"
 #include "../Systems/RenderSystem.hpp"
 #include "../Systems/UIRenderSystem.hpp"
 
+#include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/Color.hpp>
 #include <algorithm>
 #include <random>
@@ -58,6 +62,7 @@ void GameState::init()
     m_universeManager.addSystem(std::make_unique<Systems::PhysicsSystem>());
     m_universeManager.addRenderSystem(std::make_unique<Systems::CelestialRenderSystem>());
     m_universeManager.addRenderSystem(std::make_unique<Systems::RenderSystem>());
+    m_universeManager.addRenderSystem(std::make_unique<Systems::RenderLerpSystem>());
 
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::RenderSystem>());
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::UIRenderSystem>());
@@ -328,7 +333,7 @@ void GameState::createJumpGates()
     for (auto& ent : systems)
         systemEnts.push_back(ent);
 
-    std::uniform_int_distribution<size_t> systemDist(0, systemEnts.size());
+    std::uniform_int_distribution<size_t> systemDist(0, systemEnts.size() - 1);
     std::uniform_real_distribution<float> satteliteOffsetDist(-(Math::PI / 8.f), +(Math::PI / 8.f));
     std::random_device rDev;
 
@@ -339,6 +344,8 @@ void GameState::createJumpGates()
         auto sysEnt2 = sysEnt1;
         while (sysEnt1 == sysEnt2)
             sysEnt2 = systemEnts[systemDist(rDev)];
+
+        printf("[GameState|D] Adding jumpgate between systems %d and %d\n", int(r.entity(sysEnt1)), int(r.entity(sysEnt2)));
 
         auto& sysPos1 = systems.get<Components::Position>(sysEnt1);
         auto& sysPos2 = systems.get<Components::Position>(sysEnt2);
@@ -357,45 +364,35 @@ void GameState::createJumpGates()
         r.assign<Components::GateShape>(gate2, dir2to1);
         r.assign<Components::JumpConnection>(gate2, gate1, 10.f);
 
-        printf("[GameState|D] Adding jumpgate between systems %d and %d\n", int(r.entity(sysEnt1)), int(r.entity(sysEnt2)));
+        printf("[GameState|D] Added jumpgate\n");
     }
-/*
-    auto gate1 = r.create<Components::SatteliteBody, Components::GateShape, Components::Renderable, Components::Position>();
-    {
-    auto& sattelite = std::get<1>(gate1);
-    auto& gate = std::get<2>(gate1);
-    auto& rend = std::get<3>(gate1);
-
-    sattelite.Orbiting = std::get<0>(sol);
-    sattelite.Distance = 1000.f;
-    sattelite.Speed = 0.0f;
-
-    sattelite.Angle = 1.5f;
-    gate.Angle = sattelite.Angle * Math::RAD2DEG;
-
-    rend.LastPosition = rend.Position = std::get<4>(gate1).Position;
-    }
-*/
 }
 
 void GameState::createJumpHoles()
 {
 }
 
+sf::CircleShape playerCircle;
 void GameState::createPlayer()
 {
     auto& r = m_universeManager.getRegistry();
 
-    auto player = std::get<0>(r.create<Components::Renderable, Components::PlayerInput, Components::Tags::CameraTag, Components::Tags::JumpCapable, Components::Velocity>());
-    // r.assign<Components::Tags::InSystem>(player, entt::entity(0));
+    auto player = std::get<0>(r.create<Components::Renderable, Components::PlayerInput, Components::Tags::CameraTag, Components::Tags::JumpCapable, Components::Velocity, Components::Rotation>());
 
-    auto& pl = r.assign<Components::PlanetShape>(player);
+    r.assign<Components::DrawableRenderable>(player, &playerCircle);
+
+    // auto& pl = r.assign<Components::PlanetShape>(player);
     auto& phy = r.assign<Components::Position>(player);
     auto& fric = r.assign<Components::Friction>(player);
 
+    playerCircle.setRadius(5.f);
+    playerCircle.setOrigin(5.f, 5.f);
+    playerCircle.setFillColor(sf::Color::White);
+
+    // pl.Color = sf::Color::White;
+    // pl.Size = 5.f;
+
     fric.Friction = 0.25f;
-    pl.Color = sf::Color::White;
-    pl.Size = 5.f;
     phy.Position.x = 500;
     phy.Position.y = 500;
 }

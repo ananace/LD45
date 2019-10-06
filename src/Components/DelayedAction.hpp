@@ -9,7 +9,7 @@ namespace Components
 struct DelayedAction
 {
     float TimeRemaining;
-    std::function<void(entt::entity)> Action;
+    std::function<void(entt::entity, entt::registry&)> Action;
 };
 
 }

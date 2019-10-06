@@ -26,7 +26,8 @@ void LogicSystem::update(const float aDt)
 
         if (before > 0 && action.TimeRemaining <= 0)
         {
-            action.Action(ent);
+            printf("[LogicSystem|D] Executing delayed action for %d\n", int(r.entity(ent)));
+            action.Action(ent, r);
 
             r.remove<Components::DelayedAction>(ent);
         }

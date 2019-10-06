@@ -51,6 +51,7 @@ set(LD45_HEADERS
     Components/UIComponent.hpp
     Components/UIDialog.hpp
     Components/Velocity.hpp
+    Components/VisibleVelocity.hpp
 
     States/GameState.hpp
     States/MenuState.hpp
@@ -60,6 +61,7 @@ set(LD45_HEADERS
     Systems/LogicSystem.hpp
     Systems/OrbitalSystem.hpp
     Systems/PhysicsSystem.hpp
+    Systems/RenderLerpSystem.hpp
     Systems/RenderSystem.hpp
     Systems/UIRenderSystem.hpp
 )
@@ -81,6 +83,7 @@ set(LD45_SOURCES
     Systems/LogicSystem.cpp
     Systems/OrbitalSystem.cpp
     Systems/PhysicsSystem.cpp
+    Systems/RenderLerpSystem.cpp
     Systems/RenderSystem.cpp
     Systems/UIRenderSystem.cpp
 

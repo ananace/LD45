@@ -15,7 +15,7 @@ struct Renderable
     sf::Vector2f Position, LastPosition, CurrentPosition;
     float Angle, LastAngle, CurrentAngle;
 
-    std::chrono::high_resolution_clock::time_point LastUpdate;
+    std::chrono::high_resolution_clock::time_point LastPositionUpdate, LastRotationUpdate;
 };
 
 struct DrawableRenderable

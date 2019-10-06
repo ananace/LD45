@@ -7,9 +7,12 @@
 #include "../Components/DelayedAction.hpp"
 #include "../Components/Friction.hpp"
 #include "../Components/JumpConnection.hpp"
+#include "../Components/PlayerInput.hpp"
 #include "../Components/Position.hpp"
+#include "../Components/Rotation.hpp"
 #include "../Components/TradeJump.hpp"
 #include "../Components/Velocity.hpp"
+#include "../Components/VisibleVelocity.hpp"
 
 #include <SFML/System/Vector2.hpp>
 using Systems::PhysicsSystem;
@@ -17,43 +20,47 @@ using namespace Components;
 
 void onTradeJumpCreate(entt::entity aShip, entt::registry& aReg, Components::TradeJump& tradeJump)
 {
-    bool hadVelocity = aReg.has<Velocity>(aShip);
-    sf::Vector2f oldVelocity;
-    if (hadVelocity)
-        oldVelocity = aReg.get<Velocity>(aShip).Velocity;
     bool hadFriction = aReg.has<Velocity>(aShip);
-    float oldFriction;
+    float oldFriction = {};
     if (hadFriction)
         oldFriction = aReg.get<Friction>(aShip).Friction;
 
     printf("[PhysicsSystem|D] Entity %d is entering trade jump to %d\n", int(aReg.entity(aShip)), int(aReg.entity(tradeJump.TargetSystem)));
 
+    if (aReg.has<PlayerInput>(aShip))
+        aReg.get<PlayerInput>(aShip).Active = false;
+
     // Remove velocity and friction components during a trade jump
     aReg.remove<Velocity>(aShip);
     aReg.remove<Friction>(aShip);
 
-    // aReg.assign<DelayedAction>(aShip, tradeJump.Time + 0.75f, [&aReg, hadFriction, oldFriction, hadVelocity, oldVelocity](auto aShip) {
-    //     if (hadVelocity)
-    //         aReg.replace<Velocity>(aShip, sf::Vector2f());
-    //     else
-    //         aReg.remove<Velocity>(aShip);
+    auto direction = Util::GetNormalized(tradeJump.EndPosition - tradeJump.StartPosition);
 
-    //     if (hadFriction)
-    //         aReg.replace<Friction>(aShip, oldFriction);
-    //     else
-    //         aReg.remove<Velocity>(aShip);
-    // });
+    aReg.assign_or_replace<VisibleVelocity>(aShip, 5.f);
+    aReg.assign_or_replace<Rotation>(aShip, Util::GetAngle(direction));
+
+    aReg.assign<DelayedAction>(aShip, tradeJump.Time + 1.f, [hadFriction, oldFriction](entt::entity aShip, entt::registry& aReg) {
+        if (hadFriction)
+            aReg.replace<Friction>(aShip, oldFriction);
+        else
+            aReg.remove<Velocity>(aShip);
+    });
 }
 
 void onTradeJumpDestroy(entt::entity aShip, entt::registry& aReg)
 {
     printf("[PhysicsSystem|D] Entity %d is finishing its trade jump\n", int(aReg.entity(aShip)));
 
+    if (aReg.has<PlayerInput>(aShip))
+        aReg.get<PlayerInput>(aShip).Active = true;
+
     // Add some residual trade speed
     auto& tradeJump = aReg.get<Components::TradeJump>(aShip);
     auto direction = Util::GetNormalized(tradeJump.EndPosition - tradeJump.StartPosition);
-    aReg.assign<Velocity>(aShip, direction * 100.f);
-    aReg.assign<Friction>(aShip, 0.5f);
+    aReg.assign<Velocity>(aShip, direction * 350.f);
+    aReg.assign<Friction>(aShip, 3.5f);
+
+    aReg.remove<VisibleVelocity>(aShip);
 }
 
 PhysicsSystem::PhysicsSystem()
@@ -74,10 +81,11 @@ void PhysicsSystem::update(const float aDt)
 {
     auto& r = getRegistry();
 
-    r.group<TradeJump>(entt::get<Position>).each([&r, aDt](auto ent, auto& tradeJump, auto& physical) {
+    r.group<TradeJump>(entt::get<Position, Rotation>).each([&r, aDt](auto ent, auto& tradeJump, auto& physical, auto& rotation) {
         auto direction = Util::GetNormalized(tradeJump.EndPosition - tradeJump.StartPosition);
         tradeJump.Progress += aDt;
 
+        rotation.Angle = Util::GetAngle(direction);
         physical.Position = Util::GetLerped(tradeJump.Progress / tradeJump.Time, tradeJump.StartPosition, tradeJump.EndPosition);
 
         if (tradeJump.Progress >= tradeJump.Time * 1.0025f)
