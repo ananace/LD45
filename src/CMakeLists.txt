@@ -31,6 +31,7 @@ set(LD45_HEADERS
     Components/Acceleration.hpp
     Components/Atmosphere.hpp
     Components/CelestialBody.hpp
+    Components/Colony.hpp
     Components/DelayedAction.hpp
     Components/Friction.hpp
     Components/GateShape.hpp

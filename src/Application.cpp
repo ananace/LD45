@@ -15,7 +15,9 @@
 Application::Application()
     : m_total{}
 {
-    m_window.create(sf::VideoMode(1366, 768), "LD45");
+    sf::ContextSettings ctx;
+    ctx.antialiasingLevel = 1;
+    m_window.create(sf::VideoMode(1366, 768), "LD45", sf::Style::Default, ctx);
     // m_window.setVerticalSyncEnabled(true);
     m_defaultView = m_window.getDefaultView();
 

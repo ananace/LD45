@@ -10,6 +10,7 @@
 #include "../Components/Tags/TracedOrbit.hpp"
 #include "../Components/Atmosphere.hpp"
 #include "../Components/CelestialBody.hpp"
+#include "../Components/Colony.hpp"
 #include "../Components/Friction.hpp"
 #include "../Components/GateShape.hpp"
 #include "../Components/JumpConnection.hpp"
@@ -86,6 +87,7 @@ void GameState::init()
 
     createJumpGates();
     createJumpHoles();
+    createColonies();
     createPlayer();
 }
 
@@ -398,6 +400,37 @@ void GameState::createJumpGates()
 
 void GameState::createJumpHoles()
 {
+}
+
+void GameState::createColonies()
+{
+    auto& r = m_universeManager.getRegistry();
+
+    auto planets = r.view<Components::Atmosphere>();
+    std::vector<entt::entity> planetEnts;
+    std::vector<entt::entity> colonizedPlanetEnts;
+    planetEnts.reserve(planets.size());
+    colonizedPlanetEnts.reserve(planets.size());
+    for (auto& ent : planets)
+        planetEnts.push_back(ent);
+
+    std::uniform_int_distribution<size_t> systemDist(0, planetEnts.size() - 1);
+    std::uniform_int_distribution<uint8_t> sizeDist(1, 8);
+    std::random_device rDev;
+
+    const auto colonies = int(planets.size() * 0.5f);
+    for (int i = 0; i < colonies; ++i)
+    {
+        auto planet = planetEnts[systemDist(rDev)];
+        while (std::find(colonizedPlanetEnts.begin(), colonizedPlanetEnts.end(), planet) != colonizedPlanetEnts.end())
+            planet = planetEnts[systemDist(rDev)];
+
+        colonizedPlanetEnts.push_back(planet);
+
+        auto& col = r.assign<Components::Colony>(planet, sizeDist(rDev));
+
+        printf("[GameState|D] Added colony of size %d on planet %d\n", col.Size, int(r.entity(planet)));
+    }
 }
 
 sf::CircleShape playerCircle;

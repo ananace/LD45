@@ -6,6 +6,7 @@
 #include "../Components/Tags/TracedOrbit.hpp"
 #include "../Components/Atmosphere.hpp"
 #include "../Components/CelestialBody.hpp"
+#include "../Components/Colony.hpp"
 #include "../Components/GateShape.hpp"
 #include "../Components/PlanetShape.hpp"
 #include "../Components/Position.hpp"
@@ -23,6 +24,7 @@
 #include <SFML/Graphics/Vertex.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
 
+#include <SFML/System/Vector2.hpp>
 #include <array>
 #include <chrono>
 #include <gsl/gsl_util>
@@ -133,6 +135,46 @@ void CelestialRenderSystem::update(const float aAlpha)
 
         target.draw(circle);
     });
+    r.group<const Colony>(entt::get<const PlanetShape, Renderable>).each([&target, &circle, aAlpha](auto ent, auto& col, auto& planet, auto& lerp){
+        // circle.setFillColor(sf::Color::White);
+        // circle.setRadius(planet.Size);
+        // circle.setOrigin(planet.Size, planet.Size);
+        // circle.setPosition(lerp.CurrentPosition);
+        // circle.setScale(1.05f, 0.05f);
+
+        sf::VertexArray verts(sf::Lines, col.Size * 2);
+
+        const float angDiff = 180.f / 8;
+        float ang1 = int(ent) * 11.25f;
+        for (uint8_t i = 0; i < col.Size; ++i)
+        {
+            const float ang2 = (ang1 + 360.f) * Math::PHI;
+
+            auto p1 = sf::Vector2f(std::cos(ang1), std::sin(ang1)) * planet.Size;
+            auto p2 = sf::Vector2f(std::cos(ang2), std::sin(ang2)) * planet.Size;
+
+            auto& v = verts[i * 2];
+            v.color = sf::Color(0, 0, 0, 64);
+            v.position = lerp.CurrentPosition + p1;
+
+            auto& v2 = verts[i * 2 + 1];
+            v2.color = sf::Color(0, 0, 0, 64);
+            v2.position = lerp.CurrentPosition + p2;
+
+            // const float distance = Util::GetLength(p2 - p1);
+            // sf::Vector2f centerPoint = p1 + ((p2 - p1) * (distance / 2.f));
+
+            // circle.setPosition(lerp.CurrentPosition + centerPoint);
+            // circle.setScale(distance / planet.Size, 0.05f);
+            // circle.setRotation(Util::GetAngle(p2 - p1) * Math::RAD2DEG);
+            // target.draw(circle);
+
+            ang1 += angDiff;
+        }
+
+        target.draw(verts);
+    });
+    circle.setScale(1.f, 1.f);
 
     sf::ConvexShape gateShape(5);
     gateShape.setPoint(0, { 10, 0 });
