@@ -4,3 +4,6 @@
 [submodule "extern/GSL"]
 	path = extern/GSL
 	url = https://github.com/microsoft/GSL
+[submodule "dist/shared-modules"]
+	path = dist/shared-modules
+	url = https://github.com/flathub/shared-modules
