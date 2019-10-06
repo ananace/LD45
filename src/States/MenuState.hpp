@@ -13,7 +13,7 @@ namespace States
 class MenuState : public BaseState
 {
 public:
-    MenuState();
+    MenuState(bool aInGame = false);
     ~MenuState();
 
     virtual void init() override;
@@ -28,6 +28,7 @@ private:
 
     EntityManager m_backgroundManager,
                   m_foregroundManager;
+    bool m_inGame;
 };
 
 }

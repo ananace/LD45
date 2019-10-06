@@ -15,12 +15,14 @@ public:
         State_SwitchTo     = 1 << 0,
         State_BringToFront = 1 << 1,
         State_PopSelf      = 1 << 2,
+        State_PopOther     = 1 << 3,
     };
 
     StateManager();
     ~StateManager();
 
     void init(Application* aApplication);
+    void update();
 
     bool hasState(const std::string& aName) const;
     bool pushState(std::unique_ptr<BaseState> aState, uint8_t aFlags = State_SwitchTo);
@@ -33,5 +35,6 @@ public:
 private:
     Application* m_application;
     std::deque<std::unique_ptr<BaseState>> m_states;
+    std::unique_ptr<BaseState> m_toPop;
     BaseState* m_curState;
 };

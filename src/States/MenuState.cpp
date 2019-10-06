@@ -13,10 +13,12 @@
 #include "../Systems/UIRenderSystem.hpp"
 
 #include "GameState.hpp"
+#include <SFML/Window/Keyboard.hpp>
 using States::MenuState;
 
-MenuState::MenuState()
+MenuState::MenuState(bool aInGame)
     : BaseState("Menu")
+    , m_inGame(aInGame)
 {
 }
 
@@ -47,16 +49,29 @@ void MenuState::init()
 
         uid.Color = sf::Color(0, 128, 128, 196);
         uic.Position = { -300, -270, 170, 100 };
+
+        if (m_inGame)
+            uic.Position.height += 50;
     }
 
-    auto p = addButton("Play");
+    auto p = addButton("Start New");
     std::get<1>(p).Parent = std::get<0>(menuDial);
+
+    if (m_inGame)
+    {
+        auto r = addButton("Resume");
+        std::get<1>(r).Parent = std::get<0>(menuDial);
+        std::get<1>(r).Position.top += 50;
+        std::get<2>(r).Color = { 128, 128, 64 };
+    }
 
     auto q = addButton("Quit");
     auto& uib = std::get<2>(q);
     auto& uic = std::get<1>(q);
     uic.Parent = std::get<0>(menuDial);
     uic.Position.top += 50;
+    if (m_inGame)
+        uic.Position.top += 50;
     uib.Color = { 128, 64, 64 };
 }
 
@@ -67,6 +82,14 @@ void MenuState::handleEvent(const sf::Event& aEvent)
     case sf::Event::KeyPressed:
         m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyPressed>>({ aEvent }); break;
     case sf::Event::KeyReleased:
+        if (aEvent.key.code == sf::Keyboard::Escape)
+        {
+            if (m_inGame)
+                getApplication().getStateManager().changeState("Game", StateManager::State_PopSelf);
+            else
+                getApplication().getRenderWindow().close();
+            return;
+        }
         m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyReleased>>({ aEvent }); break;
     case sf::Event::MouseButtonPressed:
         m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::MouseButtonPressed>>({ aEvent }); break;
@@ -103,8 +126,10 @@ void MenuState::onButtonPress(const Events::UIButtonClicked& aEvent)
 {
     if (aEvent.Button == "Quit")
         getApplication().getRenderWindow().close();
-    else if (aEvent.Button == "Play")
-        getApplication().getStateManager().pushState(std::make_unique<States::GameState>(), StateManager::State_SwitchTo);
+    else if (aEvent.Button == "Start New")
+        getApplication().getStateManager().pushState(std::make_unique<States::GameState>(), StateManager::State_SwitchTo | StateManager::State_PopSelf | StateManager::State_PopOther);
+    else if (aEvent.Button == "Resume")
+        getApplication().getStateManager().changeState("Game", StateManager::State_PopSelf);
 }
 
 std::tuple<entt::entity, Components::UIComponent&, Components::UIButton&> MenuState::addButton(const std::string& aTitle)

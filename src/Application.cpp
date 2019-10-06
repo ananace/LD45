@@ -32,7 +32,7 @@ void Application::run()
 {
     m_stateManager.init(this);
 
-    m_stateManager.pushState(std::make_unique<States::GameState>());
+    m_stateManager.pushState(std::make_unique<States::MenuState>());
 
     using clock = std::chrono::high_resolution_clock;
     constexpr std::chrono::nanoseconds ticklength(1000000000 / kTickRate);
@@ -111,6 +111,8 @@ void Application::run()
         m_window.draw(debug);
 
         m_window.display();
+
+        m_stateManager.update();
         debug.endFrame();
 
         // Sleep before next frame

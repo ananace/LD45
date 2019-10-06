@@ -33,9 +33,12 @@
 #include "../Systems/RenderSystem.hpp"
 #include "../Systems/UIRenderSystem.hpp"
 
+#include "MenuState.hpp"
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/Color.hpp>
+#include <SFML/Window/Keyboard.hpp>
 #include <algorithm>
+#include <memory>
 #include <random>
 
 using States::GameState;
@@ -95,6 +98,12 @@ void GameState::handleEvent(const sf::Event& aEvent)
         m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyPressed>>({ aEvent });
         break;
     case sf::Event::KeyReleased:
+        if (aEvent.key.code == sf::Keyboard::Escape)
+        {
+            getApplication().getStateManager().pushState(std::make_unique<MenuState>(true), StateManager::State_SwitchTo);
+            return;
+        }
+
         m_universeManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyReleased>>({ aEvent });
         m_foregroundManager.getDispatcher().enqueue<Events::InputEvent<sf::Event::KeyReleased>>({ aEvent });
         break;

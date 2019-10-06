@@ -18,6 +18,12 @@ void StateManager::init(Application* aApplication)
     m_application = aApplication;
 }
 
+void StateManager::update()
+{
+    if (m_toPop)
+        m_toPop.reset();
+}
+
 bool StateManager::hasState(const std::string& aName) const
 {
     for (auto& state : m_states)
@@ -31,6 +37,9 @@ bool StateManager::pushState(std::unique_ptr<BaseState> aState, uint8_t aFlags)
     auto name = aState->getName();
     aState->setApplication(m_application);
     aState->init();
+
+    if ((aFlags & State_PopOther) == State_PopOther)
+        popState(name);
 
     m_states.push_front(std::move(aState));
 
@@ -47,11 +56,15 @@ bool StateManager::popState(const std::string& aName)
         auto& curState = *it;
         if (curState->getName() == aName)
         {
-            m_curState = nullptr;
-            it = m_states.erase(it);
-
-            if (it != m_states.end())
-                m_curState = it->get();
+            if (curState.get() == m_curState)
+            {
+                m_curState = nullptr;
+                it = m_states.erase(it);
+                if (it != m_states.end())
+                    m_curState = it->get();
+            }
+            else
+                it = m_states.erase(it);
 
             return true;
         }
@@ -70,7 +83,10 @@ bool StateManager::changeState(const std::string& aName, uint8_t aFlags)
             if ((aFlags & State_PopSelf) == State_PopSelf)
             {
                 auto curIt = std::find_if(m_states.begin(), m_states.end(), [&](auto& test) { return test.get() == m_curState; });
+                auto ptr = std::move(*curIt);
                 m_states.erase(curIt);
+
+                m_toPop = std::move(ptr);
             }
 
             m_curState = state.get();
