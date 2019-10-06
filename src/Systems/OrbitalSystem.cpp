@@ -90,7 +90,10 @@ void OrbitalSystem::systemExclusion()
             auto distance = Util::GetLength(position.Position - body.Position);
 
             if (distance >= kSystemSize)
+            {
+                printf("[OrbitSystem|D] Removing entity %d from system %d\n", int(r.entity(ent)), int(r.entity(systemEnt)));
                 r.remove<Components::Tags::InSystem>(ent);
+            }
         });
     });
 }
@@ -104,7 +107,10 @@ void OrbitalSystem::systemInclusion()
             auto distance = Util::GetLength(position.Position - body.Position);
 
             if (distance < kSystemSize)
+            {
+                printf("[OrbitSystem|D] Adding entity %d to system %d\n", int(r.entity(ent)), int(r.entity(systemEnt)));
                 r.assign<Components::Tags::InSystem>(ent, systemEnt);
+            }
         });
     });
 }

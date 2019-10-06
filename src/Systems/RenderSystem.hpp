@@ -11,7 +11,10 @@ public:
     RenderSystem();
     ~RenderSystem();
 
-    virtual void update(const float aAlpha);
+    virtual void update(const float aAlpha) override;
+
+private:
+    void onInit() override;
 };
 
 }

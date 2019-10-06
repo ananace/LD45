@@ -1,13 +1,18 @@
 #include "GameState.hpp"
 #include "../Application.hpp"
 #include "../Math.hpp"
+#include "../Util.hpp"
 
 #include "../Components/Tags/CameraTag.hpp"
+#include "../Components/Tags/InSystem.hpp"
+#include "../Components/Tags/JumpCapable.hpp"
 #include "../Components/Tags/SystemCore.hpp"
+#include "../Components/Tags/TracedOrbit.hpp"
 #include "../Components/Atmosphere.hpp"
 #include "../Components/CelestialBody.hpp"
 #include "../Components/Friction.hpp"
 #include "../Components/GateShape.hpp"
+#include "../Components/JumpConnection.hpp"
 #include "../Components/Position.hpp"
 #include "../Components/PlanetShape.hpp"
 #include "../Components/PlayerInput.hpp"
@@ -77,23 +82,9 @@ void GameState::init()
         createSystem(sf::Vector2f(std::cos(dir), std::sin(dir)) * 150000.f);
     }
 
-    auto& r = m_universeManager.getRegistry();
-
-    auto player = r.create<Components::PlanetShape, Components::Position, Components::Renderable, Components::Friction, Components::Velocity, Components::PlayerInput, Components::Tags::CameraTag>();
-    auto& pl = std::get<1>(player);
-    auto& phy = std::get<2>(player);
-    auto& rend = std::get<3>(player);
-    auto& fric = std::get<4>(player);
-    auto& cam = std::get<7>(player);
-
-    cam.Influence = 2;
-    fric.Friction = 0.25f;
-    pl.Color = sf::Color::White;
-    pl.Size = 5.f;
-    phy.Position.x = 500;
-    phy.Position.y = 500;
-    rend.Position = phy.Position;
-    rend.LastPosition = phy.Position;
+    createJumpGates();
+    createJumpHoles();
+    createPlayer();
 }
 
 void GameState::handleEvent(const sf::Event& aEvent)
@@ -255,20 +246,20 @@ void GameState::createSystem(const sf::Vector2f aCenter)
     }
 
     auto planets = planetCountDist(rDev);
-    printf("Generating %d planets:\n", planets);
+    printf("[GameState|D] Generating %d planets:\n", planets);
 
     for (; planets > 0; --planets)
     {
-        const auto planet = std::get<0>(r.create<Components::Renderable, Components::Position>());
+        const auto planet = std::get<0>(r.create<Components::Position, Components::Renderable, Components::Tags::TracedOrbit>());
         const float planetSize = planetSizeDist(rDev);
-        printf("- Generating planet of size %.1f\n", planetSize);
+        printf("[GameState|D] - Generating planet of size %.1f\n", planetSize);
 
         const auto& shape = r.assign<Components::PlanetShape>(planet, planetSize, sf::Color(colorDist(rDev), colorDist(rDev), colorDist(rDev)));
 
         const bool hasAtmosphere = atmosphereChanceDist(rDev) == 0;
         if (hasAtmosphere)
         {
-            printf("  with atmosphere\n");
+            printf("[GameState|D]   with atmosphere\n");
             const auto& atmos = r.assign<Components::Atmosphere>(planet, planetSize, planetSize * atmosphereThicknessDist(rDev), shape.Color);
 
             currentDistance += atmos.OuterSize * 0.75f;
@@ -283,26 +274,26 @@ void GameState::createSystem(const sf::Vector2f aCenter)
             totalMoonRadius += planetSize;
 
             const auto moons = moonCountDist(rDev);
-            printf("  with %d moons:\n", moons);
+            printf("[GameState|D]   with %d moons:\n", moons);
             for (uint8_t i = 0; i < moons; ++i)
             {
-                auto moon = std::get<0>(r.create<Components::Renderable, Components::Position>());
+                auto moon = std::get<0>(r.create<Components::Position, Components::Renderable, Components::Tags::TracedOrbit>());
                 float moonSize = moonSizeDist(rDev);
-                printf("  - Generating moon of size %.1f\n", moonSize);
+                printf("[GameState|D]   - Generating moon of size %.1f\n", moonSize);
 
                 const bool moonHasMoon = moonChanceDist(rDev) == 0 && moonChanceDist(rDev) == 0;
                 float additionalRad = 0.f;
                 if (moonHasMoon)
                 {
-                    printf("    with a moon of its own:\n");
-                    auto moonMoon = std::get<0>(r.create<Components::Renderable, Components::Position>());
+                    printf("[GameState|D]     with a moon of its own:\n");
+                    auto moonMoon = std::get<0>(r.create<Components::Position, Components::Renderable, Components::Tags::TracedOrbit>());
                     float moonMoonSize = moonSizeDist(rDev);
 
-                    printf("    - Generating moon of size %.1f\n", moonMoonSize);
+                    printf("[GameState|D]     - Generating moon of size %.1f\n", moonMoonSize);
 
                     const auto& body = r.assign<Components::SatteliteBody>(moonMoon, moon, moonSize + moonMoonSize * stellarSpaceDist(rDev), ((Math::PI * 2.f) / orbitPeriodDist(rDev)), randRadDist(rDev));
                     r.assign<Components::PlanetShape>(moonMoon, moonMoonSize, sf::Color(colorDist(rDev), colorDist(rDev), colorDist(rDev)));
-                    printf("      at an orbit of %.2f\n", body.Distance);
+                    printf("[GameState|D]       at an orbit of %.2f\n", body.Distance);
                     additionalRad += body.Distance;
                 }
 
@@ -310,18 +301,18 @@ void GameState::createSystem(const sf::Vector2f aCenter)
 
                 auto& body = r.assign<Components::SatteliteBody>(moon, planet, totalMoonRadius, ((Math::PI * 2.f) / orbitPeriodDist(rDev)), randRadDist(rDev));
                 r.assign<Components::PlanetShape>(moon, moonSize, sf::Color(colorDist(rDev), colorDist(rDev), colorDist(rDev)));
-                printf("    with an orbital distance of %.2f:\n", body.Distance);
+                printf("[GameState|D]     with an orbital distance of %.2f:\n", body.Distance);
             }
         }
 
         auto& body = r.assign<Components::SatteliteBody>(planet, systemCenter, currentDistance + totalMoonRadius * 1.75f, ((Math::PI * 2.f) / orbitPeriodDist(rDev)), randRadDist(rDev));
-        printf("  with orbit distance of %.2f\n", body.Distance);
-        printf("  and orbit period of %.2fs\n\n", (Math::PI * 2.f) / body.Speed);
+        printf("[GameState|D]   with orbit distance of %.2f\n", body.Distance);
+        printf("[GameState|D]   and orbit period of %.2fs\n\n", (Math::PI * 2.f) / body.Speed);
 
         currentDistance += totalMoonRadius * 3.5f + planetSize * stellarSpaceDist(rDev);
     }
 
-    printf("Final system size %f\n", currentDistance);
+    printf("[GameState|D] Final system size %f\n", currentDistance);
 
     currentDistance = std::max(currentDistance, 5000.f);
 
@@ -331,7 +322,49 @@ void GameState::createSystem(const sf::Vector2f aCenter)
     starfield.FieldSize.top = aCenter.y - currentDistance * 2.5f;
     starfield.FieldSize.width = currentDistance * 5.f;
     starfield.FieldSize.height = currentDistance * 5.f;
+}
 
+void GameState::createJumpGates()
+{
+    auto& r = m_universeManager.getRegistry();
+
+    auto systems = r.view<Components::Tags::SystemCore, Components::Position>();
+    std::vector<entt::entity> systemEnts;
+    systemEnts.reserve(systems.size());
+    for (auto& ent : systems)
+        systemEnts.push_back(ent);
+
+    std::uniform_int_distribution<size_t> systemDist(0, systemEnts.size());
+    std::uniform_real_distribution<float> satteliteOffsetDist(-(Math::PI / 8.f), +(Math::PI / 8.f));
+    std::random_device rDev;
+
+    const auto gates = int(systems.size() * 0.75f);
+    for (int i = 0; i < gates; ++i)
+    {
+        auto sysEnt1 = systemEnts[systemDist(rDev)];
+        auto sysEnt2 = sysEnt1;
+        while (sysEnt1 == sysEnt2)
+            sysEnt2 = systemEnts[systemDist(rDev)];
+
+        auto& sysPos1 = systems.get<Components::Position>(sysEnt1);
+        auto& sysPos2 = systems.get<Components::Position>(sysEnt2);
+
+        auto gate1 = std::get<0>(r.create<Components::Renderable, Components::Position>());
+        auto gate2 = std::get<0>(r.create<Components::Renderable, Components::Position>());
+
+        auto dir1to2 = Util::GetAngle(Util::GetNormalized(sysPos2.Position - sysPos1.Position));
+        auto dir2to1 = Util::GetAngle(Util::GetNormalized(sysPos1.Position - sysPos2.Position));
+
+        r.assign<Components::SatteliteBody>(gate1, sysEnt1, 2500.f, 0.f, dir1to2 + satteliteOffsetDist(rDev));
+        r.assign<Components::GateShape>(gate1, dir1to2);
+        r.assign<Components::JumpConnection>(gate1, gate2, 10.f);
+
+        r.assign<Components::SatteliteBody>(gate2, sysEnt2, 2500.f, 0.f, dir2to1 + satteliteOffsetDist(rDev));
+        r.assign<Components::GateShape>(gate2, dir2to1);
+        r.assign<Components::JumpConnection>(gate2, gate1, 10.f);
+
+        printf("[GameState|D] Adding jumpgate between systems %d and %d\n", int(r.entity(sysEnt1)), int(r.entity(sysEnt2)));
+    }
 /*
     auto gate1 = r.create<Components::SatteliteBody, Components::GateShape, Components::Renderable, Components::Position>();
     {
@@ -349,4 +382,26 @@ void GameState::createSystem(const sf::Vector2f aCenter)
     rend.LastPosition = rend.Position = std::get<4>(gate1).Position;
     }
 */
+}
+
+void GameState::createJumpHoles()
+{
+}
+
+void GameState::createPlayer()
+{
+    auto& r = m_universeManager.getRegistry();
+
+    auto player = std::get<0>(r.create<Components::Renderable, Components::PlayerInput, Components::Tags::CameraTag, Components::Tags::JumpCapable, Components::Velocity>());
+    // r.assign<Components::Tags::InSystem>(player, entt::entity(0));
+
+    auto& pl = r.assign<Components::PlanetShape>(player);
+    auto& phy = r.assign<Components::Position>(player);
+    auto& fric = r.assign<Components::Friction>(player);
+
+    fric.Friction = 0.25f;
+    pl.Color = sf::Color::White;
+    pl.Size = 5.f;
+    phy.Position.x = 500;
+    phy.Position.y = 500;
 }

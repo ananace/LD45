@@ -23,6 +23,11 @@ namespace Util
         return std::sqrt(aVec.x * aVec.x + aVec.y * aVec.y);
     }
 
+    inline float GetAngle(const sf::Vector2f& aVec)
+    {
+        return std::atan2(aVec.y, aVec.x);
+    }
+
     inline sf::Vector2f GetNormalized(const sf::Vector2f& aVec)
     {
         if (GSL_UNLIKELY(aVec.x == 0 && aVec.y == 0))

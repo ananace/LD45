@@ -35,4 +35,5 @@ void LogicSystem::update(const float aDt)
 
 void LogicSystem::onInit()
 {
+
 }

@@ -24,6 +24,9 @@ set(LD45_HEADERS
     Components/Tags/CameraTag.hpp
     Components/Tags/InFaction.hpp
     Components/Tags/InSystem.hpp
+    Components/Tags/JumpCapable.hpp
+    Components/Tags/SystemCore.hpp
+    Components/Tags/TracedOrbit.hpp
 
     Components/Acceleration.hpp
     Components/Atmosphere.hpp
@@ -33,12 +36,14 @@ set(LD45_HEADERS
     Components/GateShape.hpp
     Components/GravityWell.hpp
     Components/HoleShape.hpp
+    Components/JumpConnection.hpp
     Components/PlanetShape.hpp
     Components/PlayerInput.hpp
     Components/Position.hpp
     Components/Renderables.hpp
     Components/Rotation.hpp
     Components/SatteliteBody.hpp
+    Components/StarField.hpp
     Components/StarShape.hpp
     Components/StationShape.hpp
     Components/TradeJump.hpp

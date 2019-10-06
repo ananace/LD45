@@ -13,6 +13,7 @@ struct TradeJump
 
     entt::entity TargetSystem;
 
+    TradeJump(const sf::Vector2f& aStart, const sf::Vector2f& aEnd, float aTime, entt::entity aTargetSystem) : StartPosition(aStart), EndPosition(aEnd), Progress{}, Time(aTime), TargetSystem(aTargetSystem) { }
     TradeJump() : Progress{}, Time(5.f) { }
 };
 

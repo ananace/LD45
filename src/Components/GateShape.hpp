@@ -9,6 +9,7 @@ struct GateShape
 
     // enum Type;
 
+    GateShape(float aAngle) : Angle(aAngle) { }
     GateShape() : Angle{} { }
 };
 

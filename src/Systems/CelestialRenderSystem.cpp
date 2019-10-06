@@ -1,7 +1,9 @@
 #include "CelestialRenderSystem.hpp"
 #include "../Application.hpp"
+#include "../Math.hpp"
 #include "../Util.hpp"
 
+#include "../Components/Tags/TracedOrbit.hpp"
 #include "../Components/Atmosphere.hpp"
 #include "../Components/CelestialBody.hpp"
 #include "../Components/GateShape.hpp"
@@ -75,7 +77,7 @@ void CelestialRenderSystem::update(const float aAlpha)
     {
     sf::CircleShape orbitCircle(16u);
     orbitCircle.setFillColor(sf::Color::Transparent);
-    r.view<const SatteliteBody, const Position>().each([orbitShader, &r, &target, &orbitCircle](auto& body, auto& position){
+    r.group<const Tags::TracedOrbit>(entt::get<const SatteliteBody, const Position>).each([orbitShader, &r, &target, &orbitCircle](const auto& _orb, auto& body, auto& position){
         auto& orbitPos = r.get<const Position>(body.Orbiting).Position;
 
         const auto& size1 = target.getView().getSize();
@@ -96,7 +98,7 @@ void CelestialRenderSystem::update(const float aAlpha)
 
     sf::CircleShape circle(64u);
     r.group<const Atmosphere>(entt::get<Renderable>).each([atmosShader, &target, &circle, aAlpha](auto& atmos, auto& lerp){
-        lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
+        // lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         circle.setFillColor(sf::Color::Transparent);
         circle.setRadius(atmos.OuterSize * 2.f);
@@ -115,7 +117,7 @@ void CelestialRenderSystem::update(const float aAlpha)
         target.draw(circle, atmosShader);
     });
     r.group<const StarShape>(entt::get<Renderable>).each([coronaShader, &target, &circle, aAlpha](auto& star, auto& lerp){
-        lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
+        // lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         const auto& size1 = target.getView().getSize();
         const auto& size2 = target.getSize();
@@ -141,7 +143,7 @@ void CelestialRenderSystem::update(const float aAlpha)
         // target.draw(circle);
     });
     r.group<const PlanetShape>(entt::get<Renderable>).each([&target, &circle, aAlpha](auto& planet, auto& lerp){
-        lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
+        // lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         circle.setFillColor(planet.Color);
         circle.setRadius(planet.Size);
@@ -163,10 +165,10 @@ void CelestialRenderSystem::update(const float aAlpha)
     gateShape.setOutlineThickness(2.f);
 
     r.group<const GateShape>(entt::get<Renderable>).each([&target, &gateShape, aAlpha](auto& gate, auto& lerp){
-        lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
+        // lerp.CurrentPosition = Util::GetLerped(aAlpha, lerp.LastPosition, lerp.Position);
 
         gateShape.setPosition(lerp.CurrentPosition);
-        gateShape.setRotation(gate.Angle);
+        gateShape.setRotation(gate.Angle * Math::RAD2DEG);
 
         target.draw(gateShape);
     });
