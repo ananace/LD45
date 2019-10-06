@@ -79,7 +79,7 @@ void CelestialRenderSystem::update(const float aAlpha)
 
     const auto& size1 = target.getView().getSize();
     const auto& size2 = target.getSize();
-    const float scale = Util::GetLength({ size1.x / size2.x, size1.y / size2.y }) * 0.7055f; // * 1.415f;
+    const float scale = Util::GetLength({ size1.x / size2.x, size1.y / size2.y }) * 0.7058f; // * 1.415f;
 
     atmosShader->setUniform("scale", scale);
     coronaShader->setUniform("scale", scale);

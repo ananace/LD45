@@ -23,6 +23,7 @@ public:
     virtual void render(const float aAlpha) override;
 
 private:
+    void createCameraTags();
     void onButtonPress(const Events::UIButtonClicked& aEvent);
     std::tuple<entt::entity, Components::UIComponent&, Components::UIButton&> addButton(const std::string& aTitle);
 

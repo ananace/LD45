@@ -48,6 +48,11 @@ void Application::run()
     DebugView debug;
     debug.init(*this);
 
+    bool drawDebug = true;
+#if defined(NDEBUG)
+    drawDebug = false;
+#endif
+
     while (m_window.isOpen())
     {
         debug.startFrame();
@@ -75,6 +80,10 @@ void Application::run()
                     m_defaultView.setSize(size);
                     m_defaultView.setCenter(size / 2.f);
                 } break;
+
+            case sf::Event::KeyReleased:
+                if (ev.key.code == sf::Keyboard::F10)
+                    drawDebug = !drawDebug;
 
             default:
                 break;
@@ -110,7 +119,8 @@ void Application::run()
         if (GSL_LIKELY(curState))
             curState->render(alpha);
 
-        m_window.draw(debug);
+        if (drawDebug)
+            m_window.draw(debug);
 
         m_window.display();
 

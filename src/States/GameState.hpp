@@ -24,10 +24,6 @@ public:
     virtual void render(const float aAlpha) override;
 
 private:
-    void createSystem(const sf::Vector2f aCenter = {});
-    void createJumpGates();
-    void createJumpHoles();
-    void createColonies();
     void createPlayer();
 
     EntityManager m_universeManager,

@@ -5,6 +5,7 @@
 #include "../Components/UIButton.hpp"
 #include "../Components/UIComponent.hpp"
 #include "../Components/UIDialog.hpp"
+#include "../Components/UIText.hpp"
 
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
@@ -103,7 +104,18 @@ void UIRenderSystem::update(const float aAlpha)
         states.transform
             .translate(component.CalculatedPosition.left, component.CalculatedPosition.top);
 
-        if (r.has<UIDialog>(ent))
+        if (r.has<UIText>(ent))
+        {
+            auto& text = r.get<UIText>(ent);
+
+            buttonText.setString(text.Text);
+            auto rect = buttonText.getLocalBounds();
+            buttonText.setOrigin(rect.width / 2.f, rect.height / 2.f);
+
+            states.transform.translate(component.Position.width / 2.f, component.Position.height / 2.f);
+            target.draw(buttonText, states);
+        }
+        else if (r.has<UIDialog>(ent))
         {
             auto& dialog = r.get<UIDialog>(ent);
 

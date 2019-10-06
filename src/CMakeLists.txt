@@ -19,6 +19,7 @@ set(LD45_HEADERS
     Math.hpp
     ResourceManager.hpp
     Spinor.hpp
+    StarSystemGenerator.hpp
     StateManager.hpp
     Util.hpp
 
@@ -77,6 +78,7 @@ set(LD45_SOURCES
     DebugView.cpp
     EntityManager.cpp
     ResourceManager.cpp
+    StarSystemGenerator.cpp
     StateManager.cpp
 
     Ships/BasicShip.cpp

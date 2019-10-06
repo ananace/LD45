@@ -1,19 +1,30 @@
+#include "GameState.hpp"
 #include "MenuState.hpp"
 #include "../Application.hpp"
+#include "../StarSystemGenerator.hpp"
 
+#include "../Components/Tags/CameraTag.hpp"
+#include "../Components/PlanetShape.hpp"
+#include "../Components/Position.hpp"
+#include "../Components/Renderables.hpp"
+#include "../Components/StarShape.hpp"
 #include "../Components/UIButton.hpp"
 #include "../Components/UIComponent.hpp"
 #include "../Components/UIDialog.hpp"
-#include "../Components/Renderables.hpp"
+#include "../Components/UIText.hpp"
 
 #include "../Events/InputEvent.hpp"
 
-#include "../Systems/PhysicsSystem.hpp"
-#include "../Systems/RenderSystem.hpp"
+#include "../Systems/OrbitalSystem.hpp"
+#include "../Systems/CelestialRenderSystem.hpp"
+#include "../Systems/RenderLerpSystem.hpp"
 #include "../Systems/UIRenderSystem.hpp"
 
-#include "GameState.hpp"
 #include <SFML/Window/Keyboard.hpp>
+
+#include <random>
+#include <vector>
+
 using States::MenuState;
 
 MenuState::MenuState(bool aInGame)
@@ -31,16 +42,30 @@ void MenuState::init()
     m_backgroundManager.init(&getApplication());
     m_foregroundManager.init(&getApplication());
 
-    m_backgroundManager.addSystem(std::make_unique<Systems::PhysicsSystem>());
-    m_backgroundManager.addRenderSystem(std::make_unique<Systems::RenderSystem>());
+    m_backgroundManager.addSystem(std::make_unique<Systems::OrbitalSystem>());
+    m_backgroundManager.addRenderSystem(std::make_unique<Systems::CelestialRenderSystem>());
+    m_backgroundManager.addRenderSystem(std::make_unique<Systems::RenderLerpSystem>());
 
-    m_foregroundManager.addRenderSystem(std::make_unique<Systems::RenderSystem>());
+    StarSystemGenerator ssg;
+    ssg.createSystem(m_backgroundManager.getRegistry());
+    ssg.createColonies(m_backgroundManager.getRegistry());
+
+    createCameraTags();
+
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::UIRenderSystem>());
 
     auto& d = m_foregroundManager.getDispatcher();
     d.sink<Events::UIButtonClicked>().connect<&MenuState::onButtonPress>(*this);
 
     auto& r = m_foregroundManager.getRegistry();
+
+    auto title = r.create<Components::UIComponent>();
+    {
+        r.assign<Components::UIText>(std::get<0>(title), "Untitled Space Exploration Game");
+        auto& uic = std::get<1>(title);
+
+        uic.Position = { -550, 10, 550, 32 };
+    }
 
     auto menuDial = r.create<Components::UIComponent, Components::UIDialog>();
     {
@@ -118,7 +143,27 @@ void MenuState::fixedUpdate(const float aDt)
 
 void MenuState::render(const float aAlpha)
 {
+    auto defView = getApplication().getRenderWindow().getView();
+    auto gameView = defView;
+
+    sf::Vector2f cameraPosition;
+    size_t cameraSources{};
+
+    auto& r = m_backgroundManager.getRegistry();
+    auto v = r.group<const Components::Tags::CameraTag>(entt::get<const Components::Renderable>);
+    v.each([&cameraSources, &cameraPosition](auto ent, const auto& cam, const auto& renderable) {
+        cameraPosition += renderable.CurrentPosition * float(cam.Influence);
+        cameraSources += cam.Influence;
+    });
+
+    cameraPosition /= float(cameraSources);
+    gameView.setCenter(cameraPosition);
+    gameView.zoom(3.5f);
+
+    getApplication().getRenderWindow().setView(gameView);
     m_backgroundManager.onRender(aAlpha);
+
+    getApplication().getRenderWindow().setView(defView);
     m_foregroundManager.onRender(aAlpha);
 }
 
@@ -145,4 +190,43 @@ std::tuple<entt::entity, Components::UIComponent&, Components::UIButton&> MenuSt
     uic.Position = { 10, 10, 150, 30 };
 
     return button;
+}
+
+void MenuState::createCameraTags()
+{
+    auto& r = m_backgroundManager.getRegistry();
+
+    auto planets = r.view<Components::PlanetShape>();
+    if (planets.empty())
+    {
+        r.view<Components::StarShape>().each([&r](auto ent, auto& star) {
+            r.assign<Components::Tags::CameraTag>(ent);
+        });
+
+        return;
+    }
+
+    std::vector<entt::entity> planetEnts;
+    std::vector<entt::entity> followedPlanetEnts;
+    planetEnts.reserve(planets.size());
+    followedPlanetEnts.reserve(planets.size());
+    for (auto& ent : planets)
+        planetEnts.push_back(ent);
+
+    std::uniform_int_distribution<size_t> systemDist(0, planetEnts.size() - 1);
+    std::random_device rDev;
+
+    const auto followed = std::max(1, int(planets.size() * 0.25f));
+    for (int i = 0; i < followed; ++i)
+    {
+        auto planet = planetEnts[systemDist(rDev)];
+        while (std::find(followedPlanetEnts.begin(), followedPlanetEnts.end(), planet) != followedPlanetEnts.end())
+            planet = planetEnts[systemDist(rDev)];
+
+        followedPlanetEnts.push_back(planet);
+
+        auto& col = r.assign<Components::Tags::CameraTag>(planet);
+
+        printf("[MenuState|D] Added camera tag on planet %d\n", int(r.entity(planet)));
+    }
 }
