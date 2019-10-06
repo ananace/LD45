@@ -63,23 +63,17 @@ void GameState::init()
     m_foregroundManager.addRenderSystem(std::make_unique<Systems::UIRenderSystem>());
 
     createSystem();
-    for (int i = 0; i < 8; ++i)
+    for (int i = 0; i < kSystemRings; ++i)
     {
-        const float total = (Math::PI*2) / 8;
-        float dir = total * i;
-        createSystem(sf::Vector2f(std::cos(dir), std::sin(dir)) * 50000.f);
-    }
-    for (int i = 0; i < 16; ++i)
-    {
-        const float total = (Math::PI*2) / 16;
-        float dir = total * i;
-        createSystem(sf::Vector2f(std::cos(dir), std::sin(dir)) * 100000.f);
-    }
-    for (int i = 0; i < 32; ++i)
-    {
-        const float total = (Math::PI*2) / 32;
-        float dir = total * i;
-        createSystem(sf::Vector2f(std::cos(dir), std::sin(dir)) * 150000.f);
+        const float distance = (i + 1) * 50000.f;
+        const int systems = std::pow(2, i + 3);
+
+        for (int j = 0; j < systems; ++j)
+        {
+            const float total = (Math::PI*2) / systems;
+            float dir = total * j;
+            createSystem(sf::Vector2f(std::cos(dir), std::sin(dir)) * distance);
+        }
     }
 
     createJumpGates();

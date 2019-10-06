@@ -10,6 +10,10 @@ namespace States
 class GameState : public BaseState
 {
 public:
+    enum {
+        kSystemRings = 4,
+    };
+
     GameState();
     ~GameState();
 

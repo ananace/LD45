@@ -80,12 +80,12 @@ uniform float scale;
 
 void main() {
     vec2 directionVec = gl_FragCoord.xy - center.xy;
-    float distance = length(directionVec);
+    float distance = length(directionVec) * scale;
 
     float noise = (1.0 + snoise(vec3(normalize(directionVec), alpha / 15.0))) * 0.5;
     distance += noise * 2.0;
 
-    float mixValue = 1.0 - exp(-(distance - (center.z / scale)) / (center.w / scale));
+    float mixValue = 1.24 - exp(-(distance - center.z) / center.w);
 
     gl_FragColor = mix(color, gl_Color, mixValue);
 }
