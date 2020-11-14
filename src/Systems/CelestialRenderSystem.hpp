@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../BaseSystem.hpp"
+#include <entt/resource/handle.hpp>
 
 namespace sf { class Shader; }
 
@@ -18,9 +19,9 @@ public:
 private:
     void onInit() override;
 
-    std::shared_ptr<sf::Shader> m_atmosphereShader,
-                                m_coronaShader,
-                                m_orbitShader;
+    entt::resource_handle<sf::Shader> m_atmosphereShader,
+                                      m_coronaShader,
+                                      m_orbitShader;
 };
 
 }

@@ -63,18 +63,18 @@ void MenuState::init()
 
     auto& r = m_foregroundManager.getRegistry();
 
-    auto title = r.create<Components::UIComponent>();
+    auto title = r.create();
     {
-        r.assign<Components::UIText>(std::get<0>(title), "Untitled Space Exploration Game");
-        auto& uic = std::get<1>(title);
+        r.emplace<Components::UIText>(title, "Untitled Space Exploration Game");
+        auto& uic = r.emplace<Components::UIComponent>(title);
 
         uic.Position = { -550, 10, 550, 32 };
     }
 
-    auto menuDial = r.create<Components::UIComponent, Components::UIDialog>();
+    auto menuDial = r.create();
     {
-        auto& uid = std::get<2>(menuDial);
-        auto& uic = std::get<1>(menuDial);
+        auto& uid = r.emplace<Components::UIDialog>(menuDial);
+        auto& uic = r.emplace<Components::UIComponent>(menuDial);
 
         uid.Color = sf::Color(0, 128, 128, 196);
         uic.Position = { -300, -270, 170, 100 };
@@ -84,20 +84,20 @@ void MenuState::init()
     }
 
     auto p = addButton("Start New");
-    std::get<1>(p).Parent = std::get<0>(menuDial);
+    r.get<Components::UIComponent>(p).Parent = menuDial;
 
     if (m_inGame)
     {
-        auto r = addButton("Resume");
-        std::get<1>(r).Parent = std::get<0>(menuDial);
-        std::get<1>(r).Position.top += 50;
-        std::get<2>(r).Color = { 128, 128, 64 };
+        auto rb = addButton("Resume");
+        r.get<Components::UIComponent>(rb).Parent = menuDial;
+        r.get<Components::UIComponent>(rb).Position.top += 50;
+        r.get<Components::UIButton>(rb).Color = { 128, 128, 64 };
     }
 
     auto q = addButton("Quit");
-    auto& uib = std::get<2>(q);
-    auto& uic = std::get<1>(q);
-    uic.Parent = std::get<0>(menuDial);
+    auto& uib = r.get<Components::UIButton>(q);
+    auto& uic = r.get<Components::UIComponent>(q);
+    uic.Parent = menuDial;
     uic.Position.top += 50;
     if (m_inGame)
         uic.Position.top += 50;
@@ -181,13 +181,13 @@ void MenuState::onButtonPress(const Events::UIButtonClicked& aEvent)
         getApplication().getStateManager().changeState("Game", StateManager::State_PopSelf);
 }
 
-std::tuple<entt::entity, Components::UIComponent&, Components::UIButton&> MenuState::addButton(const std::string& aTitle)
+entt::entity MenuState::addButton(const std::string& aTitle)
 {
     auto& r = m_foregroundManager.getRegistry();
 
-    auto button = r.create<Components::UIComponent, Components::UIButton>();
-    auto& uib = std::get<2>(button);
-    auto& uic = std::get<1>(button);
+    auto button = r.create();
+    auto& uib = r.emplace<Components::UIButton>(button);
+    auto& uic = r.emplace<Components::UIComponent>(button);
 
     uib.Text = aTitle;
     uib.Color = { 64, 128, 64 };
@@ -204,7 +204,7 @@ void MenuState::createCameraTags()
     if (planets.empty())
     {
         r.view<Components::StarShape>().each([&r](auto ent, auto& star) {
-            r.assign<Components::Tags::CameraTag>(ent);
+            r.emplace<Components::Tags::CameraTag>(ent);
         });
 
         return;
@@ -229,7 +229,7 @@ void MenuState::createCameraTags()
 
         followedPlanetEnts.push_back(planet);
 
-        auto& col = r.assign<Components::Tags::CameraTag>(planet);
+        auto& col = r.emplace<Components::Tags::CameraTag>(planet);
 
         printf("[MenuState|D] Added camera tag on planet %d\n", int(r.entity(planet)));
     }

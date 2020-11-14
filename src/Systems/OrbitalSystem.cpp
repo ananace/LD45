@@ -30,24 +30,25 @@ void OrbitalSystem::update(const float aDt)
     // r.view<Physical,GravityWell>()
 
     // Heavily simplified orbital mechanics
-    r.group<SatteliteBody>(entt::get<Position>).each([aDt, &r](auto& sattelite, auto& position) {
-        const auto& orbiting = r.get<const Position>(sattelite.Orbiting);
+    auto sattelites = r.group<SatteliteBody>(entt::get<Position>);
+    for (auto satteliteEnt : sattelites)
+    {
+        auto& sattelite = sattelites.get<SatteliteBody>(satteliteEnt);
+        auto& position = sattelites.get<Position>(satteliteEnt);
+        const auto& orbiting = sattelites.get<Position>(sattelite.Orbiting);
         const auto& parentPosition = orbiting.Position;
 
         sattelite.CurrentAngle += sattelite.Speed * aDt;
 
         sf::Vector2f direction(std::cos(sattelite.CurrentAngle), std::sin(sattelite.CurrentAngle));
         position.Position = parentPosition + direction * sattelite.Distance;
-    });
+    };
 
     // Ensure stellar modifications trickle down to sattelites
     orbitSetup();
 
-    // Ensure far objects are detached from their system
-    systemExclusion();
-
-    // Ensure nearby objects are attached to the system
-    systemInclusion();
+    // Ensure objects are attached and detached from their system
+    systemHandling();
 }
 
 void OrbitalSystem::onInit()
@@ -69,7 +70,7 @@ void OrbitalSystem::orbitSetup(uint8_t aRounds)
     for (; aRounds > 0; --aRounds)
     {
         r.group<SatteliteBody>(entt::get<Position>).each([&r](auto& sattelite, auto& position) {
-            const auto& orbiting = r.get<const Position>(sattelite.Orbiting);
+            const auto& orbiting = r.get<Position>(sattelite.Orbiting);
             const auto& parentPosition = orbiting.Position;
 
             sf::Vector2f direction(std::cos(sattelite.CurrentAngle), std::sin(sattelite.CurrentAngle));
@@ -78,39 +79,45 @@ void OrbitalSystem::orbitSetup(uint8_t aRounds)
     }
 }
 
-void OrbitalSystem::systemExclusion()
+void OrbitalSystem::systemHandling()
 {
     auto& r = getRegistry();
 
-    r.group<const Components::Tags::SystemCore>(entt::get<const Components::Position>).each([&r](auto systemEnt, const auto& core, const auto& body) {
-        r.group<const Components::Tags::InSystem>(entt::get<const Components::Position>).each([systemEnt, &r, &body](auto ent, const auto& sys, const auto& position) {
-            if (sys.System != systemEnt)
-                return;
+    auto systems = r.group<Components::Tags::SystemCore>(entt::get<Components::Position>);
+    auto insystem = r.group<Components::Tags::InSystem>(entt::get<Components::Position>);
+    auto nonsystem = r.group<>(entt::get<Components::Position>, entt::exclude<Components::Tags::InSystem>);
 
+    for (auto systemEnt : systems)
+    {
+        for (auto insystemEnt : insystem)
+        {
+            auto& sys = insystem.get<Components::Tags::InSystem>(insystemEnt);
+            if (sys.System != systemEnt)
+                continue;
+
+            auto& position = insystem.get<Components::Position>(insystemEnt);
+            auto& body = systems.get<Components::Position>(systemEnt);
             auto distance = Util::GetLength(position.Position - body.Position);
 
             if (distance >= kSystemSize)
             {
-                printf("[OrbitSystem|D] Removing entity %d from system %d\n", int(r.entity(ent)), int(r.entity(systemEnt)));
-                r.remove<Components::Tags::InSystem>(ent);
+                printf("[OrbitSystem|D] Removing entity %d from system %d\n", int(r.entity(insystemEnt)), int(r.entity(systemEnt)));
+                r.remove<Components::Tags::InSystem>(insystemEnt);
             }
-        });
-    });
-}
+        };
 
-void OrbitalSystem::systemInclusion()
-{
-    auto& r = getRegistry();
+        for (auto nonsystemEnt : nonsystem)
+        {
+            auto& body = systems.get<Components::Position>(systemEnt);
+            auto& position = nonsystem.get<Components::Position>(nonsystemEnt);
 
-    r.group<const Components::Tags::SystemCore>(entt::get<const Components::Position>).each([&r](auto systemEnt, const auto& core, const auto& body) {
-        r.group<>(entt::get<const Components::Position>, entt::exclude<Components::Tags::InSystem>).each([systemEnt, &r, &body](auto ent, const auto& position) {
             auto distance = Util::GetLength(position.Position - body.Position);
 
             if (distance < kSystemSize)
             {
-                printf("[OrbitSystem|D] Adding entity %d to system %d\n", int(r.entity(ent)), int(r.entity(systemEnt)));
-                r.assign<Components::Tags::InSystem>(ent, systemEnt);
+                printf("[OrbitSystem|D] Adding entity %d to system %d\n", int(r.entity(nonsystemEnt)), int(r.entity(systemEnt)));
+                r.emplace<Components::Tags::InSystem>(nonsystemEnt, systemEnt);
             }
-        });
-    });
+        };
+    };
 }

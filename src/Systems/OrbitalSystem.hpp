@@ -24,8 +24,7 @@ private:
 
     void onOrbitRepair(const Events::OrbitRepair& aEvent);
     void orbitSetup(uint8_t aRounds = 1);
-    void systemExclusion();
-    void systemInclusion();
+    void systemHandling();
 };
 
 }

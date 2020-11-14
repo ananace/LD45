@@ -18,13 +18,14 @@
 using Systems::PhysicsSystem;
 using namespace Components;
 
-void onTradeJumpCreate(entt::entity aShip, entt::registry& aReg, Components::TradeJump& tradeJump)
+void onTradeJumpCreate(entt::registry& aReg, entt::entity aShip)
 {
     bool hadFriction = aReg.has<Velocity>(aShip);
     float oldFriction = {};
     if (hadFriction)
         oldFriction = aReg.get<Friction>(aShip).Friction;
 
+    auto& tradeJump = aReg.get<Components::TradeJump>(aShip);
     printf("[PhysicsSystem|D] Entity %d is entering trade jump to %d\n", int(aReg.entity(aShip)), int(aReg.entity(tradeJump.TargetSystem)));
 
     if (aReg.has<PlayerInput>(aShip))
@@ -36,10 +37,10 @@ void onTradeJumpCreate(entt::entity aShip, entt::registry& aReg, Components::Tra
 
     auto direction = Util::GetNormalized(tradeJump.EndPosition - tradeJump.StartPosition);
 
-    aReg.assign_or_replace<VisibleVelocity>(aShip, 2.5f);
-    aReg.assign_or_replace<Rotation>(aShip, Util::GetAngle(direction));
+    aReg.emplace_or_replace<VisibleVelocity>(aShip, 2.5f);
+    aReg.emplace_or_replace<Rotation>(aShip, Util::GetAngle(direction));
 
-    aReg.assign<DelayedAction>(aShip, tradeJump.Time + 1.f, [hadFriction, oldFriction](entt::entity aShip, entt::registry& aReg) {
+    aReg.emplace<DelayedAction>(aShip, tradeJump.Time + 1.f, [hadFriction, oldFriction](entt::entity aShip, entt::registry& aReg) {
         if (hadFriction)
             aReg.replace<Friction>(aShip, oldFriction);
         else
@@ -47,7 +48,7 @@ void onTradeJumpCreate(entt::entity aShip, entt::registry& aReg, Components::Tra
     });
 }
 
-void onTradeJumpDestroy(entt::entity aShip, entt::registry& aReg)
+void onTradeJumpDestroy(entt::registry& aReg, entt::entity aShip)
 {
     printf("[PhysicsSystem|D] Entity %d is finishing its trade jump\n", int(aReg.entity(aShip)));
 
@@ -57,8 +58,8 @@ void onTradeJumpDestroy(entt::entity aShip, entt::registry& aReg)
     // Add some residual trade speed
     auto& tradeJump = aReg.get<Components::TradeJump>(aShip);
     auto direction = Util::GetNormalized(tradeJump.EndPosition - tradeJump.StartPosition);
-    aReg.assign<Velocity>(aShip, direction * 350.f);
-    aReg.assign<Friction>(aShip, 3.5f);
+    aReg.emplace<Velocity>(aShip, direction * 350.f);
+    aReg.emplace<Friction>(aShip, 3.5f);
 
     aReg.remove<VisibleVelocity>(aShip);
 }
@@ -81,7 +82,12 @@ void PhysicsSystem::update(const float aDt)
 {
     auto& r = getRegistry();
 
-    r.group<TradeJump>(entt::get<Position, Rotation>).each([&r, aDt](auto ent, auto& tradeJump, auto& physical, auto& rotation) {
+    auto jumping = r.group<TradeJump>(entt::get<Position, Rotation>);
+    for (auto jumpingEnt : jumping)
+    {
+        auto& tradeJump = jumping.get<TradeJump>(jumpingEnt);
+        auto& physical = jumping.get<Position>(jumpingEnt);
+        auto& rotation = jumping.get<Rotation>(jumpingEnt);
         auto direction = Util::GetNormalized(tradeJump.EndPosition - tradeJump.StartPosition);
         tradeJump.Progress += aDt;
 
@@ -89,32 +95,39 @@ void PhysicsSystem::update(const float aDt)
         physical.Position = Util::GetLerped(tradeJump.Progress / tradeJump.Time, tradeJump.StartPosition, tradeJump.EndPosition);
 
         if (tradeJump.Progress >= tradeJump.Time * 1.0025f)
-            r.remove<TradeJump>(ent);
-    });
+            r.remove<TradeJump>(jumpingEnt);
+    };
 
-    r.view<const Position, const JumpConnection, const Tags::InSystem>().each([&r](auto& pos, auto& connection, auto& inSystem) {
-        r.group<const Tags::JumpCapable>(entt::get<const Tags::InSystem, const Position>, entt::exclude<TradeJump>).each([&r, &pos, &inSystem, &connection](auto ent, const auto& _cap, const auto& entInSystem, const auto& entPos){
+    auto jumpCapable = r.group<Tags::JumpCapable>(entt::get<Tags::InSystem, Position>, entt::exclude<TradeJump>);
+    r.view<Position, JumpConnection, Tags::InSystem>().each([&r, &jumpCapable](auto& pos, auto& connection, auto& inSystem) {
+        for (auto jumpCapableEnt : jumpCapable)
+        {
+            auto& entInSystem = jumpCapable.get<Tags::InSystem>(jumpCapableEnt);
             if (entInSystem.System != inSystem.System)
                 return;
 
+            auto& entPos = jumpCapable.get<Position>(jumpCapableEnt);
             float distance = Util::GetLength(pos.Position - entPos.Position);
             if (distance < 10.f)
             {
-                const auto& target = r.get<const Position>(connection.Target);
-                const auto& targetSys = r.get<const Tags::InSystem>(connection.Target);
+                const auto& target = r.get<Position>(connection.Target);
+                const auto& targetSys = r.get<Tags::InSystem>(connection.Target);
 
-                r.assign<TradeJump>(ent, pos.Position, target.Position, connection.Time, targetSys.System);
+                r.emplace<TradeJump>(jumpCapableEnt, pos.Position, target.Position, connection.Time, targetSys.System);
             }
-        });
+        };
     });
 
-    r.group<const Friction>(entt::get<Velocity>).each([aDt](auto& friction, auto& velocity) {
+    auto friction = r.group<Friction>(entt::get<Velocity>);
+    friction.each([aDt](auto& friction, auto& velocity) {
         velocity.Velocity -= velocity.Velocity * (friction.Friction * aDt);
     });
-    r.group<const Acceleration>(entt::get<Velocity>).each([aDt](auto& accel, auto& velocity) {
+    auto acceleration = r.group<Acceleration>(entt::get<Velocity>);
+    acceleration.each([aDt](auto& accel, auto& velocity) {
         velocity.Velocity += accel.Acceleration * aDt;
     });
-    r.group<const Velocity>(entt::get<Position>).each([aDt](auto& velocity, auto& position) {
+    auto velocity = r.group<Velocity>(entt::get<Position>);
+    velocity.each([aDt](auto& velocity, auto& position) {
         position.Position += velocity.Velocity * aDt;
     });
 }

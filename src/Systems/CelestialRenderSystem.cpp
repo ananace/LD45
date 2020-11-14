@@ -69,9 +69,9 @@ void CelestialRenderSystem::update(const float aAlpha)
 
     float totalAlpha = std::chrono::duration<float>(app.getTotalTime()).count();
 
-    sf::Shader* atmosShader = m_atmosphereShader.get();
-    sf::Shader* coronaShader = m_coronaShader.get();
-    sf::Shader* orbitShader = m_orbitShader.get();
+    sf::Shader* atmosShader = &m_atmosphereShader.get();
+    sf::Shader* coronaShader = &m_coronaShader.get();
+    sf::Shader* orbitShader = &m_orbitShader.get();
 
     atmosShader->setUniform("alpha", totalAlpha);
     coronaShader->setUniform("alpha", totalAlpha);
@@ -89,7 +89,7 @@ void CelestialRenderSystem::update(const float aAlpha)
     sf::CircleShape orbitCircle(16u);
     orbitCircle.setFillColor(sf::Color::Transparent);
     r.group<const Tags::TracedOrbit>(entt::get<const SatteliteBody, const Position>).each([orbitShader, &size2, &r, &target, &orbitCircle](const auto& _orb, auto& body, auto& position){
-        auto& orbitPos = r.get<const Position>(body.Orbiting).Position;
+        auto& orbitPos = r.get<Position>(body.Orbiting).Position;
 
         auto coords = target.mapCoordsToPixel(orbitPos);
         orbitShader->setUniform("center", sf::Glsl::Vec4{ float(coords.x), size2.y - float(coords.y), body.Distance, 0.5f });

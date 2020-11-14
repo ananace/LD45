@@ -25,7 +25,7 @@ public:
 private:
     void createCameraTags();
     void onButtonPress(const Events::UIButtonClicked& aEvent);
-    std::tuple<entt::entity, Components::UIComponent&, Components::UIButton&> addButton(const std::string& aTitle);
+    entt::entity addButton(const std::string& aTitle);
 
     EntityManager m_backgroundManager,
                   m_foregroundManager;

@@ -19,16 +19,17 @@
 using Systems::RenderLerpSystem;
 using namespace Components;
 
-void onRenderableConstruct(entt::entity aEnt, entt::registry& aRegistry, Renderable& aRenderable)
+void onRenderableConstruct(entt::registry& aRegistry, entt::entity aEnt)
 {
+    auto& aRenderable = aRegistry.get<Renderable>(aEnt);
     if (aRegistry.has<Position>(aEnt))
     {
-        auto& pos = aRegistry.get<const Position>(aEnt);
+        auto& pos = aRegistry.get<Position>(aEnt);
         aRenderable.Position = aRenderable.LastPosition = pos.Position;
     }
     if (aRegistry.has<Rotation>(aEnt))
     {
-        auto& rot = aRegistry.get<const Rotation>(aEnt);
+        auto& rot = aRegistry.get<Rotation>(aEnt);
         aRenderable.Angle = aRenderable.LastAngle = rot.Angle;
     }
 }
@@ -48,7 +49,7 @@ void RenderLerpSystem::update(const float aAlpha)
 
     auto now = std::chrono::high_resolution_clock::now();
 
-    r.view<Renderable, const Position>().each([aAlpha, now, &r](auto& renderable, auto& position) {
+    r.view<Renderable, Position>().each([aAlpha, now, &r](auto& renderable, auto& position) {
         if (position.Position != renderable.Position || now - renderable.LastPositionUpdate > std::chrono::milliseconds(25))
         {
             renderable.LastPositionUpdate = now;
@@ -58,7 +59,7 @@ void RenderLerpSystem::update(const float aAlpha)
 
         renderable.CurrentPosition = Util::GetLerped(aAlpha, renderable.LastPosition, renderable.Position);
     });
-    r.view<Renderable, const Rotation>().each([aAlpha, now, &r](auto& renderable, auto& angle) {
+    r.view<Renderable, Rotation>().each([aAlpha, now, &r](auto& renderable, auto& angle) {
         if (angle.Angle != renderable.Angle || now - renderable.LastRotationUpdate > std::chrono::milliseconds(25))
         {
             renderable.LastRotationUpdate = now;

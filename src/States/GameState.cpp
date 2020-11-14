@@ -159,12 +159,12 @@ void GameState::render(const float aAlpha)
         cameraPosition += renderable.CurrentPosition * float(cam.Influence);
         cameraSources += cam.Influence;
     });
-    const auto vExtraEnd = v.raw<const Components::Tags::CameraTag>() + v.size<const Components::Tags::CameraTag>();
-    const auto vExtraBegin = v.raw<const Components::Tags::CameraTag>() + v.size();
+    // const auto vExtraEnd = v.raw<const Components::Tags::CameraTag>() + v.size<const Components::Tags::CameraTag>();
+    // const auto vExtraBegin = v.raw<const Components::Tags::CameraTag>() + v.size();
 
-    std::for_each(vExtraBegin, vExtraEnd, [&r, &cameraSources, cameraPosition](auto& cam) {
-        // auto ent = r.entity(cam);
-    });
+    // std::for_each(vExtraBegin, vExtraEnd, [&r, &cameraSources, cameraPosition](auto& cam) {
+    //     // auto ent = r.entity(cam);
+    // });
 
     cameraPosition /= float(cameraSources);
 
@@ -184,13 +184,18 @@ void GameState::createPlayer()
 {
     auto& r = m_universeManager.getRegistry();
 
-    auto player = std::get<0>(r.create<Components::Renderable, Components::PlayerInput, Components::Tags::CameraTag, Components::Tags::JumpCapable, Components::Velocity, Components::Rotation>());
-
-    r.assign<Components::DrawableRenderable>(player, &playerShip);
+    auto player = r.create();
+    r.emplace<Components::Renderable>(player);
+    r.emplace<Components::PlayerInput>(player);
+    r.emplace<Components::Tags::CameraTag>(player);
+    r.emplace<Components::Tags::JumpCapable>(player);
+    r.emplace<Components::Velocity>(player);
+    r.emplace<Components::Rotation>(player);
+    r.emplace<Components::DrawableRenderable>(player, &playerShip);
 
     // auto& pl = r.assign<Components::PlanetShape>(player);
-    auto& phy = r.assign<Components::Position>(player);
-    auto& fric = r.assign<Components::Friction>(player);
+    auto& phy = r.emplace<Components::Position>(player);
+    auto& fric = r.emplace<Components::Friction>(player);
 
     // pl.Color = sf::Color::White;
     // pl.Size = 5.f;

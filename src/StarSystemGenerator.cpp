@@ -46,8 +46,8 @@ void StarSystemGenerator::createSystem(entt::registry& aReg, const sf::Vector2f&
     bool binarySystem = binarySystemChanceDist(rDev) == 0;
 
     auto systemCenter = aReg.create();
-    aReg.assign<Components::Position>(systemCenter, aCenter);
-    aReg.assign<Components::Tags::SystemCore>(systemCenter);
+    aReg.emplace<Components::Position>(systemCenter, aCenter);
+    aReg.emplace<Components::Tags::SystemCore>(systemCenter);
 
     float currentDistance = 0;
 
@@ -64,19 +64,27 @@ void StarSystemGenerator::createSystem(entt::registry& aReg, const sf::Vector2f&
         float ang = randRadDist(rDev);
 
         // Orbit points, in the centerpoint between system center and the star
-        auto star1Orbit = std::get<0>(aReg.create<Components::Position>());
-        aReg.assign<Components::SatteliteBody>(star1Orbit, systemCenter, ((starSize1 + starSize2) / 2) * 1.5f, orbitTime, ang);
+        auto star1Orbit = aReg.create();
+        aReg.emplace<Components::Position>(star1Orbit);
+        aReg.emplace<Components::SatteliteBody>(star1Orbit, systemCenter, ((starSize1 + starSize2) / 2) * 1.5f, orbitTime, ang);
 
-        auto star2Orbit = std::get<0>(aReg.create<Components::Position>());
-        aReg.assign<Components::SatteliteBody>(star2Orbit, systemCenter, ((starSize1 + starSize2) / 2) * 1.5f, orbitTime, ang + Math::PI);
+        auto star2Orbit = aReg.create();
+        aReg.emplace<Components::Position>(star2Orbit);
+        aReg.emplace<Components::SatteliteBody>(star2Orbit, systemCenter, ((starSize1 + starSize2) / 2) * 1.5f, orbitTime, ang + Math::PI);
 
-        auto star1 = std::get<0>(aReg.create<Components::CelestialBody, Components::Position, Components::Renderable>());
-        aReg.assign<Components::SatteliteBody>(star1, star1Orbit, ((starSize1 + starSize2) / 2), orbitTime, ang + Math::PI * 1.5f);
-        aReg.assign<Components::StarShape>(star1, starSize1, starType1);
+        auto star1 = aReg.create();
+        aReg.emplace<Components::CelestialBody>(star1);
+        aReg.emplace<Components::Position>(star1);
+        aReg.emplace<Components::Renderable>(star1);
+        aReg.emplace<Components::SatteliteBody>(star1, star1Orbit, ((starSize1 + starSize2) / 2), orbitTime, ang + Math::PI * 1.5f);
+        aReg.emplace<Components::StarShape>(star1, starSize1, starType1);
 
-        auto star2 = std::get<0>(aReg.create<Components::CelestialBody, Components::Position, Components::Renderable>());
-        aReg.assign<Components::SatteliteBody>(star2, star2Orbit, ((starSize1 + starSize2) / 2), -orbitTime, ang - Math::PI * 1.5f);
-        aReg.assign<Components::StarShape>(star2, starSize2, starType2);
+        auto star2 = aReg.create();
+        aReg.emplace<Components::CelestialBody>(star2);
+        aReg.emplace<Components::Position>(star2);
+        aReg.emplace<Components::Renderable>(star2);
+        aReg.emplace<Components::SatteliteBody>(star2, star2Orbit, ((starSize1 + starSize2) / 2), -orbitTime, ang - Math::PI * 1.5f);
+        aReg.emplace<Components::StarShape>(star2, starSize2, starType2);
 
         currentDistance += ((starSize1 + starSize2) / 2) * stellarSpaceDist(rDev);
     }
@@ -85,9 +93,9 @@ void StarSystemGenerator::createSystem(entt::registry& aReg, const sf::Vector2f&
         printf("[SSG|D] Generating system\n");
         auto starType = Components::StarShape::StarType(starTypeDist(rDev));
 
-        aReg.assign<Components::CelestialBody>(systemCenter);
-        auto& shape = aReg.assign<Components::StarShape>(systemCenter, starSizeDist(rDev), starType);
-        auto& rend = aReg.assign<Components::Renderable>(systemCenter);
+        aReg.emplace<Components::CelestialBody>(systemCenter);
+        auto& shape = aReg.emplace<Components::StarShape>(systemCenter, starSizeDist(rDev), starType);
+        auto& rend = aReg.emplace<Components::Renderable>(systemCenter);
         rend.Position = rend.LastPosition = aCenter;
 
         currentDistance += shape.Size * stellarSpaceDist(rDev);
@@ -98,17 +106,20 @@ void StarSystemGenerator::createSystem(entt::registry& aReg, const sf::Vector2f&
 
     for (; planets > 0; --planets)
     {
-        const auto planet = std::get<0>(aReg.create<Components::Position, Components::Renderable, Components::Tags::TracedOrbit>());
+        const auto planet = aReg.create();
+        aReg.emplace<Components::Position>(planet);
+        aReg.emplace<Components::Renderable>(planet);
+        aReg.emplace<Components::Tags::TracedOrbit>(planet);
         const float planetSize = planetSizeDist(rDev);
         printf("[SSG|D] - Generating planet of size %.1f\n", planetSize);
 
-        const auto& shape = aReg.assign<Components::PlanetShape>(planet, planetSize, sf::Color(colorDist(rDev), colorDist(rDev), colorDist(rDev)));
+        const auto& shape = aReg.emplace<Components::PlanetShape>(planet, planetSize, sf::Color(colorDist(rDev), colorDist(rDev), colorDist(rDev)));
 
         const bool hasAtmosphere = atmosphereChanceDist(rDev) == 0;
         if (hasAtmosphere)
         {
             printf("[SSG|D]   with atmosphere\n");
-            const auto& atmos = aReg.assign<Components::Atmosphere>(planet, planetSize, planetSize * atmosphereThicknessDist(rDev), shape.Color);
+            const auto& atmos = aReg.emplace<Components::Atmosphere>(planet, planetSize, planetSize * atmosphereThicknessDist(rDev), shape.Color);
 
             currentDistance += atmos.OuterSize * 0.75f;
         }
@@ -126,8 +137,11 @@ void StarSystemGenerator::createSystem(entt::registry& aReg, const sf::Vector2f&
             for (uint8_t i = 0; i < moons; ++i)
             {
                 float moonSize = moonSizeDist(rDev);
-                auto moon = std::get<0>(aReg.create<Components::Position, Components::Renderable, Components::Tags::TracedOrbit>());
-                auto& shape = aReg.assign<Components::PlanetShape>(moon, moonSize, sf::Color(colorDist(rDev), colorDist(rDev), colorDist(rDev)));
+                auto moon = aReg.create();
+                aReg.emplace<Components::Position>(moon);
+                aReg.emplace<Components::Renderable>(moon);
+                aReg.emplace<Components::Tags::TracedOrbit>(moon);
+                auto& shape = aReg.emplace<Components::PlanetShape>(moon, moonSize, sf::Color(colorDist(rDev), colorDist(rDev), colorDist(rDev)));
                 printf("[SSG|D]   - Generating moon of size %.1f\n", moonSize);
 
                 float additionalRad = 0.f;
@@ -135,7 +149,7 @@ void StarSystemGenerator::createSystem(entt::registry& aReg, const sf::Vector2f&
                 if (hasAtmosphere)
                 {
                     printf("[SSG|D]     with atmosphere\n");
-                    const auto& atmos = aReg.assign<Components::Atmosphere>(moon, moonSize, moonSize * atmosphereThicknessDist(rDev), shape.Color);
+                    const auto& atmos = aReg.emplace<Components::Atmosphere>(moon, moonSize, moonSize * atmosphereThicknessDist(rDev), shape.Color);
 
                     additionalRad += atmos.OuterSize * 0.75f;
                 }
@@ -145,8 +159,11 @@ void StarSystemGenerator::createSystem(entt::registry& aReg, const sf::Vector2f&
                 {
                     printf("[SSG|D]     with a moon of its own:\n");
                     float moonMoonSize = moonSizeDist(rDev);
-                    auto moonMoon = std::get<0>(aReg.create<Components::Position, Components::Renderable, Components::Tags::TracedOrbit>());
-                    auto& shape = aReg.assign<Components::PlanetShape>(moonMoon, moonMoonSize, sf::Color(colorDist(rDev), colorDist(rDev), colorDist(rDev)));
+                    auto moonMoon = aReg.create();
+                    aReg.emplace<Components::Position>(moonMoon);
+                    aReg.emplace<Components::Renderable>(moonMoon);
+                    aReg.emplace<Components::Tags::TracedOrbit>(moonMoon);
+                    auto& shape = aReg.emplace<Components::PlanetShape>(moonMoon, moonMoonSize, sf::Color(colorDist(rDev), colorDist(rDev), colorDist(rDev)));
 
                     printf("[SSG|D]     - Generating moon of size %.1f\n", moonMoonSize);
 
@@ -154,13 +171,13 @@ void StarSystemGenerator::createSystem(entt::registry& aReg, const sf::Vector2f&
                     if (hasAtmosphere)
                     {
                         printf("[SSG|D]       with atmosphere\n");
-                        const auto& atmos = aReg.assign<Components::Atmosphere>(moonMoon, moonMoonSize, moonMoonSize * atmosphereThicknessDist(rDev), shape.Color);
+                        const auto& atmos = aReg.emplace<Components::Atmosphere>(moonMoon, moonMoonSize, moonMoonSize * atmosphereThicknessDist(rDev), shape.Color);
 
                         additionalRad += atmos.OuterSize * 0.75f;
                     }
 
                     float orbitDir = (reverseOrbitChanceDist(rDev) == 0 ? -1 : 1);
-                    const auto& body = aReg.assign<Components::SatteliteBody>(moonMoon, moon, moonSize + moonMoonSize * stellarSpaceDist(rDev), ((Math::PI * 2.f) / orbitPeriodDist(rDev)) * orbitDir, randRadDist(rDev));
+                    const auto& body = aReg.emplace<Components::SatteliteBody>(moonMoon, moon, moonSize + moonMoonSize * stellarSpaceDist(rDev), ((Math::PI * 2.f) / orbitPeriodDist(rDev)) * orbitDir, randRadDist(rDev));
                     printf("[SSG|D]       at an orbit of %.2f\n", body.Distance);
                     additionalRad += body.Distance;
                 }
@@ -168,13 +185,13 @@ void StarSystemGenerator::createSystem(entt::registry& aReg, const sf::Vector2f&
                 totalMoonRadius += additionalRad + moonSize * stellarSpaceDist(rDev);
 
                 float orbitDir = (reverseOrbitChanceDist(rDev) == 0 ? -1 : 1);
-                auto& body = aReg.assign<Components::SatteliteBody>(moon, planet, totalMoonRadius, ((Math::PI * 2.f) / orbitPeriodDist(rDev)) * orbitDir, randRadDist(rDev));
+                auto& body = aReg.emplace<Components::SatteliteBody>(moon, planet, totalMoonRadius, ((Math::PI * 2.f) / orbitPeriodDist(rDev)) * orbitDir, randRadDist(rDev));
                 printf("[SSG|D]     with an orbital distance of %.2f:\n", body.Distance);
             }
         }
 
         float orbitDir = (reverseOrbitChanceDist(rDev) == 0 ? -1 : 1);
-        auto& body = aReg.assign<Components::SatteliteBody>(planet, systemCenter, currentDistance + totalMoonRadius * 1.75f, ((Math::PI * 2.f) / orbitPeriodDist(rDev)) * orbitDir, randRadDist(rDev));
+        auto& body = aReg.emplace<Components::SatteliteBody>(planet, systemCenter, currentDistance + totalMoonRadius * 1.75f, ((Math::PI * 2.f) / orbitPeriodDist(rDev)) * orbitDir, randRadDist(rDev));
         printf("[SSG|D]   with orbit distance of %.2f\n", body.Distance);
         printf("[SSG|D]   and orbit period of %.2fs\n\n", (Math::PI * 2.f) / body.Speed);
 
@@ -185,7 +202,7 @@ void StarSystemGenerator::createSystem(entt::registry& aReg, const sf::Vector2f&
 
     currentDistance = std::max(currentDistance, 5000.f);
 
-    auto& starfield = aReg.assign<Components::StarField>(systemCenter);
+    auto& starfield = aReg.emplace<Components::StarField>(systemCenter);
     starfield.Count = 2048;
     starfield.FieldSize.left = aCenter.x - currentDistance * 2.5f;
     starfield.FieldSize.top = aCenter.y - currentDistance * 2.5f;
@@ -199,7 +216,7 @@ void StarSystemGenerator::createJumpHoles(entt::registry& aReg)
 {
     auto systems = aReg.view<Components::Tags::SystemCore, Components::Position>();
     std::vector<entt::entity> systemEnts;
-    systemEnts.reserve(systems.size());
+    // systemEnts.reserve(systems.size());
     for (auto& ent : systems)
         systemEnts.push_back(ent);
 
@@ -207,7 +224,7 @@ void StarSystemGenerator::createJumpHoles(entt::registry& aReg)
     std::uniform_real_distribution<float> satteliteOffsetDist(-(Math::PI / 8.f), +(Math::PI / 8.f));
     std::random_device rDev;
 
-    const auto gates = int(systems.size() * 0.75f);
+    const auto gates = int(systemEnts.size() * 0.75f);
     for (int i = 0; i < gates; ++i)
     {
         auto sysEnt1 = systemEnts[systemDist(rDev)];
@@ -220,19 +237,23 @@ void StarSystemGenerator::createJumpHoles(entt::registry& aReg)
         auto& sysPos1 = systems.get<Components::Position>(sysEnt1);
         auto& sysPos2 = systems.get<Components::Position>(sysEnt2);
 
-        auto gate1 = std::get<0>(aReg.create<Components::Renderable, Components::Position>());
-        auto gate2 = std::get<0>(aReg.create<Components::Renderable, Components::Position>());
+        auto gate1 = aReg.create();
+        aReg.emplace<Components::Renderable>(gate1);
+        aReg.emplace<Components::Position>(gate1);
+        auto gate2 = aReg.create();
+        aReg.emplace<Components::Renderable>(gate2);
+        aReg.emplace<Components::Position>(gate2);
 
         auto dir1to2 = Util::GetAngle(Util::GetNormalized(sysPos2.Position - sysPos1.Position));
         auto dir2to1 = Util::GetAngle(Util::GetNormalized(sysPos1.Position - sysPos2.Position));
 
-        aReg.assign<Components::SatteliteBody>(gate1, sysEnt1, 2500.f, 0.f, dir1to2 + satteliteOffsetDist(rDev));
-        aReg.assign<Components::GateShape>(gate1, dir1to2);
-        aReg.assign<Components::JumpConnection>(gate1, gate2, 10.f);
+        aReg.emplace<Components::SatteliteBody>(gate1, sysEnt1, 2500.f, 0.f, dir1to2 + satteliteOffsetDist(rDev));
+        aReg.emplace<Components::GateShape>(gate1, dir1to2);
+        aReg.emplace<Components::JumpConnection>(gate1, gate2, 10.f);
 
-        aReg.assign<Components::SatteliteBody>(gate2, sysEnt2, 2500.f, 0.f, dir2to1 + satteliteOffsetDist(rDev));
-        aReg.assign<Components::GateShape>(gate2, dir2to1);
-        aReg.assign<Components::JumpConnection>(gate2, gate1, 10.f);
+        aReg.emplace<Components::SatteliteBody>(gate2, sysEnt2, 2500.f, 0.f, dir2to1 + satteliteOffsetDist(rDev));
+        aReg.emplace<Components::GateShape>(gate2, dir2to1);
+        aReg.emplace<Components::JumpConnection>(gate2, gate1, 10.f);
 
         printf("[SSG|D] Added jumpgate\n");
     }
@@ -261,7 +282,7 @@ void StarSystemGenerator::createColonies(entt::registry& aReg)
 
         colonizedPlanetEnts.push_back(planet);
 
-        auto& col = aReg.assign<Components::Colony>(planet, sizeDist(rDev));
+        auto& col = aReg.emplace<Components::Colony>(planet, sizeDist(rDev));
 
         printf("[SSG|D] Added colony of size %d on planet %d\n", col.Size, int(aReg.entity(planet)));
     }

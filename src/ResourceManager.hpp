@@ -2,6 +2,8 @@
 
 #include <SFML/System/Err.hpp>
 #include <entt/core/hashed_string.hpp>
+#include <entt/core/type_info.hpp>
+#include <entt/resource/cache.hpp>
 
 #include <any>
 #include <memory>
@@ -16,6 +18,8 @@
 #define RES_WARN sf::err() << "[ResMgr|W] "
 #define RES_ERROR sf::err() << "[ResMgr|E] "
 
+namespace sf { class Font; class Image; class Shader; class Texture; class Music; class SoundBuffer; }
+
 class ResourceManager
 {
 public:
@@ -23,64 +27,66 @@ public:
     {
         std::string Name, Path;
         std::any ExtraData;
-        const std::type_info& Type;
+        entt::type_info Type;
     };
 
     ResourceManager();
     ~ResourceManager();
 
     template<typename T>
-    std::shared_ptr<T> load(entt::hashed_string aName, bool aFatal = false) {
+    entt::resource_handle<T> load(entt::hashed_string aName, bool aFatal = false) {
         if (m_registeredResources.count(aName) == 0)
         {
             RES_ERROR << "Tried to load unregistered resource " << std::string(aName.data()) << std::endl;
             if (aFatal)
                 throw std::runtime_error("Tried to load unregistered resource " + std::string(aName.data()));
-            return std::shared_ptr<T>();
+            return entt::resource_handle<T>();
         }
 
         const auto& def = m_registeredResources.at(aName);
-        if (def.Type != typeid(T))
+        if (def.Type != entt::type_id<T>())
         {
             RES_ERROR << "Resource " << def.Name << " is not of type " << def.Type.name() << std::endl;
             if (aFatal)
-                throw std::runtime_error("Resource " + def.Name + " is not of type " + def.Type.name());
-            return std::shared_ptr<T>();
+                throw std::runtime_error("Resource " + def.Name + " is not of type " + std::string(def.Type.name()));
+            return entt::resource_handle<T>();
         }
 
-        if (m_loadedResources.count(aName) > 0)
-        {
-            auto& weakptr = m_loadedResources.at(aName);
-            std::shared_ptr<void> loaded;
-            if (!weakptr.expired())
-                loaded = weakptr.lock();
-
-            if (loaded)
-            {
-                RES_DEBUG << "Resource " << def.Name << " already loaded, returning" << std::endl;
-                return std::reinterpret_pointer_cast<T>(loaded);
-            }
-        }
-
-        auto loaded(loadDefinition<T>(def, aFatal));
-
-        auto voidp = std::reinterpret_pointer_cast<void>(loaded);
-        m_loadedResources[aName] = voidp;
-
-        return loaded;
+        return loadDefinition<T>(def, aFatal);
     }
 
     template<typename T>
     void addResource(const std::string& aName, const std::string& aPath, std::any aExtraData = std::any()) {
-        addResource({ aName, aPath, aExtraData, typeid(T) });
+        addResource({ aName, aPath, aExtraData, entt::type_id<T>() });
     }
 
 private:
+#define LOADER(TYPE) \
+struct TYPE##Loader final : entt::resource_loader<TYPE##Loader, sf::TYPE> { \
+    std::shared_ptr<sf::TYPE> load(const ResourceDefinition& aDef, bool aFatal) const; \
+} \
+
+LOADER(Font);
+LOADER(Image);
+LOADER(Shader);
+LOADER(Texture);
+LOADER(Music);
+LOADER(SoundBuffer);
+
+#undef LOADER
+
+private:
+    entt::resource_cache<sf::Font> mFontCache;
+    entt::resource_cache<sf::Image> mImageCache;
+    entt::resource_cache<sf::Shader> mShaderCache;
+    entt::resource_cache<sf::Texture> mTextureCache;
+    entt::resource_cache<sf::Music> mMusicCache;
+    entt::resource_cache<sf::SoundBuffer> mSoundBufferCache;
+
     void addResource(ResourceDefinition&& aResource);
 
     template<typename T>
-    std::shared_ptr<T> loadDefinition(const ResourceDefinition& aFile, bool aFatal);
+    entt::resource_handle<T> loadDefinition(const ResourceDefinition& aFile, bool aFatal);
 
     std::unordered_map<entt::hashed_string::hash_type, ResourceDefinition> m_registeredResources;
-    std::unordered_map<entt::hashed_string::hash_type, std::weak_ptr<void>> m_loadedResources;
 };
